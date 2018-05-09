@@ -31,12 +31,12 @@ With this sample app, you can:
 
     	const APPID = 'abcdefg'
     	
-4. Contact us at sales@agora.io to abtain the Agora Miniapp SDK, and rename the SDK to "mini-app-sdk-production.js".
+4. Contact sales@agora.io to abtain the Agora Miniapp SDK, and rename the SDK to "mini-app-sdk-production.js".
 5. Save the "mini-app-production.js" under the *lib* folder of this project.
 6. Start the WeChat Developer Tool and import this project.
 7. Enter a channel name and join a channel. Invite your friend to join in the same channel and you will be able to see each other.
 
-## bout the Token/Dynamic Key
+## About the Token/Dynamic Key
 
 If you have enabled the App Cerficate, you will need to generate the Token/Dynamic Key at the server for authentication purposes. Use it in the following method:
 
