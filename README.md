@@ -17,7 +17,7 @@ With this sample app, you can:
 ## Preparing the Developer Environment
 
 1. Ensure that you have installed the WeChat Developer Tool.
-2. Ensure that you have a wechat OpenPlatform account that supports **live-pusher** and **live-player**. Only certified corporate accounts in certain industry have access to these two components. For details, click [here] (https://developers.weixin.qq.com/miniprogram/dev/component/live-player.html) .
+2. Ensure that you have a wechat OpenPlatform account that supports **live-pusher** and **live-player**. Only certified corporate accounts in certain industry have access to these two components. For details, click [here](https://developers.weixin.qq.com/miniprogram/dev/component/live-player.html) .
 3. Ensure that you have granted access to the following domains in your OpenPlatform account:
 
  * http://miniapp.agoraio.cn
