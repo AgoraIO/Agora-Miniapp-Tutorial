@@ -1,62 +1,56 @@
-## Agora Miniapp Tutorial
+# Agora Miniapp Tutorial
 
-*其他语言版本： [简体中文](README.CN.md)*
+*其他语言版本：[简体中文](README.CN.md)*
 
-This repository will help you learn how to use Agora Miniapp SDK to implement a simple video conference Wechat miniapp.
+## Introduction
+
+Built upon the Agora Miniapp SDK, the Agora Miniapp Sample App is an open-source demo that integrates video chat and live broadcast into your Wechat Mini Application.
 
 With this sample app, you can:
 
-- Integrate Agora Miniapp SDK
+* Integrate the Agora Miniapp SDK
+* Join a channel
+* Push your local stream to the channel
+* Subscribe to remote streams in the same channel
+* Leave a channel
 
-- Join a channel
+## Preparing the Developer Environment
 
-- Push your local stream to the channel
+1. Ensure that you have installed the WeChat Developer Tool.
+2. Ensure that you have a wechat OpenPlatform account that supports **live-pusher** and **live-player**. Only certified corporate accounts in certain industry have access to these two components. For details, click [here](https://developers.weixin.qq.com/miniprogram/dev/component/live-player.html) .
+3. Ensure that you have granted access to the following domains in your OpenPlatform account:
 
-- Subscribe remote streams in the same channel
-
-- Leave a channel
-
-## Prerequisite
-
-- A Wechat OpenPlatform account **supporting live-pusher and live-player** (only certified corporate account in certain industry can use these two compoennts,  for details [check here](https://developers.weixin.qq.com/miniprogram/dev/component/live-pusher.html))
-
-- In the account, grant access to following domain:
-
-  -  https://miniapp.agoraio.cn 
-
-  - wss://miniapp.agoraio.cn
+ * http://miniapp.agoraio.cn
+ * wss://miniapp.agoraio.cn
 
 ## Running the App
+ 
+1. Create a developer account at [Agora.io](http://dashboard.agora.io/signin/), obtain an App ID, and enable the App Certificate.
+2. Download this project.
+3. Fill in the App ID in *config.js* in the *utils* folder of this project:
 
-First, create a developer account at [Agora.io](https://dashboard.agora.io/signin/), and obtain an App ID.
-Update "config.js" in the util folder with your App ID.
+    	const APPID = 'abcdefg'
+    	
+4. Contact sales@agora.io to abtain the Agora Miniapp SDK, and rename the SDK to "mini-app-sdk-production.js".
+5. Save the "mini-app-production.js" under the *lib* folder of this project.
+6. Start the WeChat Developer Tool and import this project.
+7. Enter a channel name and join a channel. Invite your friend to join in the same channel and you will be able to see each other.
 
-```javascript
-const APPID = 'abcdefg'
-```
+## About the Token/Dynamic Key
 
-The Agora Miniapp SDK can be downloaded from our official website or requested by contacting us. Name your SDK to "mini-app-sdk-production.js" and put it under lib folder.
+If you have enabled the App Cerficate, you will need to generate the Token/Dynamic Key at the server for authentication purposes. Use it in the following method:
 
-Start Wechat Develoer tools and import this project.
+    	//...
+    	client.join(<your key/access token here>, channel, uid, () => {
+    	//...
+    	
+See [Token](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_native?platform=Android) or [Dynamic Key](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_web?platform=Web) for generating the Token or Key at the server.
 
-Join a channel and invite your friend to join the same one, you shall be able to see each other.
+## Contact Us
 
-## About Token/Dynamic Key
-
-If APP certificate is on, you will need to provide a service to calculate your dynamic key/access token and use it in following code
-
-```javascript
-//... 
-client.join(<Your dynamic key/access token here>, channel, uid, () => {
-//...
-```
-
-## Connect Us
-
-- You can find full API document at [Document Center](https://docs.agora.io/en/)
-
-
-- You can file bugs about this demo at [issue](https://github.com/AgoraIO/Agora-Android-Tutorial-1to1/issues)
+* You can find the API document at [Developer Center](http://docs.agora.io/en/).
+* You can report issues about this demo at [issue](https://github.com/AgoraIO/Agora-Android-Tutorial-1to1/issues).
 
 ## License
-MIT
+
+The MIT License (MIT).
