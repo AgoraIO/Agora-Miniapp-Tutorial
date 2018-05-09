@@ -29,7 +29,7 @@ With this sample app, you can:
 ## Running the App
 
 First, create a developer account at [Agora.io](https://dashboard.agora.io/signin/), and obtain an App ID.
-Update "config.js" in the project root dir with your App ID.
+Update "config.js" in the util folder with your App ID.
 
 ```javascript
 const APPID = 'abcdefg'
