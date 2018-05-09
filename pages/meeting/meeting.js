@@ -35,6 +35,7 @@ Page({
     this.containerSize = { width: 0, height: 0 };
     this.client = null;
     this.layouter = null;
+    this.reconnectTimer = null;
     wx.setNavigationBarTitle({
       title: `${this.channel}(${this.uid})`
     });
@@ -114,8 +115,17 @@ Page({
     Utils.log(`onUnload`);
     const context = wx.createLivePusherContext();
     context && context.stop();
+    if(this.reconnectTimer){
+      Utils.log(`clear timeout`);
+      clearTimeout(this.reconnectTimer);
+    }
+    this.reconnectTimer = null;
     this.stopPlayers(this.data.playUrls);
-    this.client && this.client.unpublish();
+    try{
+      this.client && this.client.unpublish();
+    } catch(e) {
+      Utils.log(`unpublish failed`);
+    };
     this.client && this.client.leave();
   },
 
@@ -244,6 +254,29 @@ Page({
    * 上传日志
    */
   uploadLogs: function () {
+    // let logs = Utils.
+    wx.request({
+      url: 'https://webdemo.agora.io/miniapps/restful/v1/logs',
+      method: 'post',
+      data: {
+        logs: Utils.getLogs(),
+        channel: this.channel
+      },
+      success: function (res) {
+        wx.showToast({
+          title: '上传成功',
+          icon: 'none',
+          duration: 2000
+        })
+      },
+      fail: function (e) {
+        wx.showToast({
+          title: '上传失败',
+          icon: 'none',
+          duration: 2000
+        })
+      }
+    })
   },
 
   /**
@@ -314,28 +347,29 @@ Page({
   initAgoraChannel: function(uid, channel) {
     return new Promise((resolve, reject) => {
       let client = new AgoraMiniappSDK.Client();
+      //subscribe stream events
+      this.subscribeEvents(client);
+      AgoraMiniappSDK.LOG.setLogLevel(-1);
       this.client = client;
       client.init(APPID, () => {
         Utils.log(`client init success`);
         client.join(undefined, channel, uid, () => {
           Utils.log(`client join channel success`);
-          //subscribe stream events
-          this.subscribeEvents(client);
 
           //and get my stream publish url
           client.publish(url => {
             Utils.log(`client publish success`);
             resolve(url);
           }, e => {
-            Utils.log(`client publish failed: ${e}`);
+            Utils.log(`client publish failed: ${e.code} ${e.reason}`);
             reject(e)
           });
         }, e => {
-          Utils.log(`client join channel failed: ${e}`);
+          Utils.log(`client join channel failed: ${e.code} ${e.reason}`);
           reject(e)
         })
       }, e => {
-        Utils.log(`client init failed: ${e}`);
+        Utils.log(`client init failed: ${e.code} ${e.reason}`);
         reject(e);
       });
     });
@@ -356,7 +390,7 @@ Page({
           this.refreshPlayers();
         }
       }, e => {
-        Utils.log(`stream subscribed failed ${e}`);
+        Utils.log(`stream subscribed failed ${e.code} ${e.reason}`);
       });
     });
 
@@ -378,8 +412,10 @@ Page({
       let code = errObj.code || 0;
       let reason = errObj.reason || "";
       Utils.log(`error: ${code}, reason: ${reason}`);
-      if(code === 901){
-        this.reconnect();
+      if(`${code}` === `${901}`){
+        this.reconnectTimer = setTimeout(() => {
+          this.reconnect();
+        }, 5000);
       }
     });
   },
@@ -388,28 +424,29 @@ Page({
     Utils.log(`start reconnect`);
     let channel = this.channel;
     let uid = this.uid;
-    this.data.playUrls = [];
-    this.data.pushing = true;
-    this.initAgoraChannel().then(url => {
-      Utils.log(`re-join channel: ${channel}, uid: ${uid}`);
-      Utils.log(`re-pushing ${url}`);
-      let size = this.layouter.adaptPusherSize(1);
-      this.setData({
-        pushUrl: url,
-        pushWidth: size.width,
-        pushHeight: size.height,
-        totalUser: 1
+    this.setData({
+      playUrls: [],
+      pushing: true,
+      pushUrl: ""
+    }, () =>  {
+      // this is setData callback
+      this.initAgoraChannel(uid, channel).then(url => {
+        Utils.log(`re-join channel: ${channel}, uid: ${uid}`);
+        Utils.log(`re-pushing ${url}`);
+        let size = this.layouter.adaptPusherSize(1);
+        this.setData({
+          pushUrl: url,
+          pushWidth: size.width,
+          pushHeight: size.height,
+          totalUser: 1
+        });
+      }).catch(e => {
+        wx.showToast({
+          title: `重连失败: ${e.code} ${e.reason}`,
+          icon: 'none',
+          duration: 2000
+        });
       });
-    }).catch(e => {
-      wx.showToast({
-        title: `重连失败: ${e}`,
-        icon: 'none',
-        duration: 5000
-      });
-
-      setTimeout(() => {
-        this.reconnect();
-      }, 5000);
     });
   }
 })
