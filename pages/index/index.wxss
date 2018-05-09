@@ -1,0 +1,85 @@
+@import "../../common.wxss";
+
+page {
+    height: 100%;
+}
+
+.content {
+  width: 100%;
+  position: absolute;
+}
+
+.content .logo-section .logo{
+  margin-bottom: 20rpx;
+}
+
+.content .logo-section .h1{
+  margin-bottom: 10rpx;
+}
+
+.content .user-section{
+  margin-bottom: 80rpx;
+}
+
+
+.content .userinfo-avatar {
+  width: 128rpx;
+  height: 128rpx;
+  margin: 80rpx 20rpx 20rpx 20rpx;
+  border-radius: 64rpx;
+  border: 2px solid white;
+  box-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+}
+
+.content .userinfo-nickname {
+  color: #2F597A;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+.content .form-section{
+  width: 100%;
+}
+
+.content .inputWrapper{
+  width: 60%;
+  border-radius: 10rpx;
+  background-color: rgba(255,255,255,0.4);
+  border: 1px solid #2F597A;
+}
+
+.content .channelInput{
+  font-size: 28rpx;
+  padding: 0 30rpx;
+  height: 80rpx;
+  color: #63C5E6;
+}
+
+.content .joinBtn{
+  background-color: #FEFFFE;
+  color: #5083AA;
+  width: 60%;
+  height: 80rpx;
+  font-size: 28rpx;
+  margin-top: 32rpx;
+  line-height: 80rpx;
+}
+
+.content .envBtn{
+  /* background-color: white; */
+  color: white;
+  height: 80rpx;
+  font-size: 28rpx;
+  margin-top: 32rpx;
+  line-height: 80rpx;
+  border: 0;
+  margin-bottom: -10rpx;
+}
+
+.content .footer{
+  justify-content: flex-end;
+  flex-grow: 1;
+  font-size: 24rpx;
+  margin-bottom: 32rpx;
+  color: #63C5E6;
+}

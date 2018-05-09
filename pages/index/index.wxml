@@ -1,0 +1,21 @@
+<!--index.wxml-->
+<view class="content agora-bg flex-center-column">
+  <view class="logo-section flex-center-column">
+    <image class="logo" style="width: 300rpx; height: 200rpx;" mode="aspectFit" src="../../images/logo.png"></image>
+    <text class="h1">声网小程序实时连麦</text>
+    <text class="h2" style="color: #FFFFFF">高效即时通信</text>
+  </view>
+  <view class="user-section flex-center-column">
+    <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"></image>
+    <text class="userinfo-nickname">{{userInfo.nickName}}</text>
+  </view>
+  <view class="form-section flex-center-column">
+    <view class="inputWrapper">
+      <input placeholder-style='color:#63C5E6' class="channelInput" placeholder='输入房间名' bindinput="onInputChannel" bindconfirm="onInputChannel" bindblur="onInputChannel"></input>
+    </view>
+    <button disabled="{{disableJoin}}" class="joinBtn" bindtap="onJoin">加入房间</button>
+  </view>
+  <view class="footer flex-center-column">
+    <text>Powered by Agora</text>
+  </view>
+</view>
