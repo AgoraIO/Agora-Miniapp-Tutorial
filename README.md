@@ -59,3 +59,4 @@ client.join(<Your dynamic key/access token here>, channel, uid, () => {
 - You can file bugs about this demo at [issue](https://github.com/AgoraIO/Agora-Android-Tutorial-1to1/issues)
 
 ## License
+MIT
