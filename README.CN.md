@@ -70,3 +70,4 @@ client.join(<Your dynamic key/access token here>, channel, uid, () => {
 - 如果发现了示例代码的 bug, 欢迎提交 [issue](https://github.com/AgoraIO/Agora-Android-Tutorial-1to1/issues)
 
 ## 代码许可
+MIT
