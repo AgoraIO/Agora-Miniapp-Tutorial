@@ -1,8 +1,8 @@
-#Agora Miniapp Tutorial
+# Agora Miniapp Tutorial
 
 *其他语言版本：[简体中文](README.CN.md)*
 
-##Introduction
+## Introduction
 
 Built upon the Agora Miniapp SDK, the Agora Miniapp Sample App is an open-source demo that integrates video chat and live broadcast into your Wechat Mini Application.
 
@@ -14,16 +14,16 @@ With this sample app, you can:
 * Subscribe to remote streams in the same channel
 * Leave a channel
 
-##Preparing the Developer Environment
+## Preparing the Developer Environment
 
 1. Ensure that you have installed the WeChat Developer Tool.
-2. Ensure that you have a wechat OpenPlatform account that supports **live-pusher** and **live-player**. Only certified corporate accounts in certain industry have access to these two components. For details, click [here] (https://developers.weixin.qq.com/miniprogram/dev/component/live-player.html) .
+2. Ensure that you have a wechat OpenPlatform account that supports **live-pusher** and **live-player**. Only certified corporate accounts in certain industry have access to these two components. For details, click [here](https://developers.weixin.qq.com/miniprogram/dev/component/live-player.html) .
 3. Ensure that you have granted access to the following domains in your OpenPlatform account:
 
  * http://miniapp.agoraio.cn
  * wss://miniapp.agoraio.cn
 
-##Running the App
+## Running the App
  
 1. Create a developer account at [Agora.io](http://dashboard.agora.io/signin/), obtain an App ID, and enable the App Certificate.
 2. Download this project.
@@ -31,12 +31,12 @@ With this sample app, you can:
 
     	const APPID = 'abcdefg'
     	
-4. Contact [us](sales@agora.io) to abtain the Agora Miniapp SDK, and rename the SDK to "mini-app-sdk-production.js".
+4. Contact sales@agora.io to abtain the Agora Miniapp SDK, and rename the SDK to "mini-app-sdk-production.js".
 5. Save the "mini-app-production.js" under the *lib* folder of this project.
 6. Start the WeChat Developer Tool and import this project.
 7. Enter a channel name and join a channel. Invite your friend to join in the same channel and you will be able to see each other.
 
-##About the Token/Dynamic Key
+## About the Token/Dynamic Key
 
 If you have enabled the App Cerficate, you will need to generate the Token/Dynamic Key at the server for authentication purposes. Use it in the following method:
 
@@ -44,13 +44,13 @@ If you have enabled the App Cerficate, you will need to generate the Token/Dynam
     	client.join(<your key/access token here>, channel, uid, () => {
     	//...
     	
-See [Token](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_native?platform=Android) or [Dynamic Key](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_web?platform=Web) for how to generate the Token or Key at the server.
+See [Token](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_native?platform=Android) or [Dynamic Key](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_web?platform=Web) for generating the Token or Key at the server.
 
-##Contact Us
+## Contact Us
 
 * You can find the API document at [Developer Center](http://docs.agora.io/en/).
 * You can report issues about this demo at [issue](https://github.com/AgoraIO/Agora-Android-Tutorial-1to1/issues).
 
-##License
+## License
 
 The MIT License (MIT).
