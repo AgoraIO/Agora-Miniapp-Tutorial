@@ -20,7 +20,7 @@ With this sample app, you can:
 2. Ensure that you have a wechat OpenPlatform account that supports **live-pusher** and **live-player**. Only certified corporate accounts in certain industry have access to these two components. For details, click [here](https://developers.weixin.qq.com/miniprogram/dev/component/live-player.html) .
 3. Ensure that you have granted access to the following domains in your OpenPlatform account:
 
- * http://miniapp.agoraio.cn
+ * https://miniapp.agoraio.cn
  * wss://miniapp.agoraio.cn
 
 ## Running the App
