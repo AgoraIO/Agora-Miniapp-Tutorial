@@ -20,7 +20,7 @@
 2. 请确保有一个支持 **live-pusher** 和 **live-player** 组件的微信公众平台账号。只有特定行业的认证企业账号才可使用这两个组件。详情请[点击这里](https://developers.weixin.qq.com/miniprogram/dev/component/live-player.html)
 3. 请确保在微信公众平台账号的开发设置中，给予以下域名请求权限：
 
- * http://miniapp.agoraio.cn
+ * https://miniapp.agoraio.cn
  * wss://miniapp.agoraio.cn
 
 ## 运行示例程序
