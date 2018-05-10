@@ -1,73 +1,61 @@
-## Agora Miniapp Tutorial
+# Agora Miniapp Tutorial
 
-*Read this in other languages: [English](README.md)*
+*Read this in other languages [English](README.md)*
 
-这个Demo会演示如何集成Agora小程序SDK实现一个简单的音视频通讯应用。
+## 简介
 
-这个Demo演示了以下功能:
+本 Demo 基于 Agora Miniapp SDK 开发，能帮助开发者在微信小程序中实现视频通话及互动直播等功能。
 
-- Agora小程序基本api调用
+本页演示如下内容：
 
-- 加入频道
+* 集成 Agora Miniapp SDK
+* 加入频道
+* 推流
+* 订阅远端流
+* 离开频道
 
-- 推流
+## 准备开发环境
 
-- 订阅远端流
+1. 请确保本地已安装微信开发者工具
+2. 请确保有一个支持 **live-pusher** 和 **live-player** 组件的微信公众平台账号。只有特定行业的认证企业账号才可使用这两个组件。详情请[点击这里](https://developers.weixin.qq.com/miniprogram/dev/component/live-player.html)
+3. 请确保在微信公众平台账号的开发设置中，给予以下域名请求权限：
 
-- 离开频道
-
-## 项目准备
-
-- 一个**支持live-pusher和live-player**的微信公众平台账号(只有特定行业的认证企业账号才可以使用这两个组件，详情请[参阅这里](https://developers.weixin.qq.com/miniprogram/dev/component/live-pusher.html))))
-
-- 在微信公众平台账号的开发设置中，给与以下域名请求权限:
-
-  - https://miniapp.agoraio.cn 
-
-  - wss://miniapp.agoraio.cn
+ * http://miniapp.agoraio.cn
+ * wss://miniapp.agoraio.cn
 
 ## 运行示例程序
+ 
+1. 在 [Agora.io](http://dashboard.agora.io/signin/) 注册账号，并创建自己的测试项目，获取 App ID。如需获取 Token 或 Channel Key，请启用 App Certificate
+2. 下载本页示例程序
+3. 打开 *utils* 文件夹，在 *config.js* 文件中填入获取到的 App ID：
 
-首先在 [Agora.io 注册](https://dashboard.agora.io/cn/signup/) 注册账号，并创建自己的测试项目，获取到 AppID。
+    	const APPID = 'abcdefg'
+    	
+4. 联系 sales@agora.io 获取 Agora Miniapp SDK，并将 SDK 重新命名为 “mini-app-sdk-production.js"
+5. 将更名后的 "mini-app-production.js" 文件保存在本示例程序的 *lib* 文件夹下
+6. 启动微信开发者工具并导入该示例程序
+7. 输入频道名，加入频道。邀请你的朋友加入同一个频道，就可以开始视频互通了。
 
-将 AppID  填写到 "utils/config.js" 中的常量中
+**声网的 Native SDK 可以直接与小程序互通。**
 
-```javascript
-const APPID = 'abcdefg'
-```
+## 关于 Token/Dynamic Key
 
-Agora小程序SDK需要另外从我们的官方网站下载获取，下载后请将SDK命名为“mini-app-sdk-production.js”后置于lib目录。
+如果启用了 App Certificate，还需要在服务端生成 Token 或 Dynamic Key 用于鉴权。将生成的 Token 或 Dynamic Key 填入如下方法中：
 
-启动微信开发者工具并引入项目。
-
-加入频道后邀请你的朋友加入同一个频道，然后就可以开始视频互通了。
-
-**使用声网的Native SDK可以直接与小程序进行互通。**
-
-## 有关Dynamic Key/Token
-
-如果你打开了安全证书，你会需要额外提供一个自己的key/token服务，修改代码将你自己计算的key填入到join方法的参数中，如下:
-
-```javascript
-//... 
-client.join(<Your dynamic key/access token here>, channel, uid, () => {
-//...
-```
+    	//...
+    	client.join(<your key/access token here>, channel, uid, () => {
+    	//...
+    	
+关于如何生成 Token 或 Dynamic Key 详见 [Token](https://docs.agora.io/cn/2.2/product/Video/Agora%20Basics/key_native?platform=Android) 或 [Dynamic Key](https://docs.agora.io/cn/2.2/product/Video/Agora%20Basics/key_web?platform=Web)。
 
 ## 联系我们
 
-- 完整的 API 文档见 [文档中心](https://docs.agora.io/cn/)
-
-
-- 如果在集成中遇到问题, 你可以到 [开发者社区](https://dev.agora.io/cn/) 提问
-
-- 如果有售前咨询问题, 可以拨打 400 632 6626，或加入官方Q群 12742516 提问
-
-
-- 如果需要售后技术支持, 你可以在 [Agora Dashboard](https://dashboard.agora.io) 提交工单
-
-
-- 如果发现了示例代码的 bug, 欢迎提交 [issue](https://github.com/AgoraIO/Agora-Android-Tutorial-1to1/issues)
+* 完整的 API 文档请参考 [开发者中心](http://docs.agora.io/cn/)
+* 如果在集成中遇到问题，你可以到 [开发者社区](https://dev.agora.io/cn/) 提问
+* 如果有售前咨询问题，可以拨打 400 632 6626，或加入官方 QQ 群 12742516
+* 如果需要售后技术支持，你可以在 [Agora Dashboard](https://dashboard.agora.io/signin?next=%2F) 提交工单
+* 如果发现该示例代码有问题，欢迎提交至 [issue](https://github.com/AgoraIO/Agora-Android-Tutorial-1to1/issues)
 
 ## 代码许可
-MIT
+
+MIT 许可 (MIT)
