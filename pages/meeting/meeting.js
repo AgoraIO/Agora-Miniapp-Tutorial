@@ -43,7 +43,7 @@ Page({
     wx.setKeepScreenOn({
       keepScreenOn: true
     });
-    Utils.getUserInfo(app, () => {});
+    Utils.getUserInfo(app, () => { });
   },
 
   /**
@@ -68,7 +68,7 @@ Page({
       });
     }).catch(e => {
       wx.showToast({
-        title: `初始化失败: ${e}`,
+        title: `初始化失败: ${e.code} ${e.reason}`,
         icon: 'none',
         duration: 5000
       });
@@ -88,7 +88,7 @@ Page({
     });
   },
 
-  
+
 
   /**
    * 生命周期函数--监听页面显示
@@ -115,15 +115,15 @@ Page({
     Utils.log(`onUnload`);
     const context = wx.createLivePusherContext();
     context && context.stop();
-    if(this.reconnectTimer){
+    if (this.reconnectTimer) {
       Utils.log(`clear timeout`);
       clearTimeout(this.reconnectTimer);
     }
     this.reconnectTimer = null;
     this.stopPlayers(this.data.playUrls);
-    try{
+    try {
       this.client && this.client.unpublish();
-    } catch(e) {
+    } catch (e) {
       Utils.log(`unpublish failed`);
     };
     this.client && this.client.leave();
@@ -155,6 +155,10 @@ Page({
 
   },
 
+  recorderInfo: function(info) {
+    Utils.log(`live-pusher info: ${JSON.stringify(info)}`);
+  },
+
   /**
    * 推流状态更新回调
    */
@@ -183,9 +187,9 @@ Page({
     let uid = parseInt(e.target.id.split("-")[1]);
     if (e.detail.code === 2004) {
       Utils.log(`live-player ${uid} started playing`);
-      this.updatePlayer(uid, {loading: false});
+      this.updatePlayer(uid, { loading: false });
       this.refreshPlayers();
-    } else if (e.detail.code === -2301){
+    } else if (e.detail.code === -2301) {
       Utils.log(`live-player ${uid} stopped`, "error");
     }
   },
@@ -193,10 +197,10 @@ Page({
   /**
    * 根据uid更新流属性
    */
-  updatePlayer(uid, options){
-    for(let i = 0; i < this.data.playUrls.length; i++){
+  updatePlayer(uid, options) {
+    for (let i = 0; i < this.data.playUrls.length; i++) {
       let urlObj = this.data.playUrls[i];
-      if(`${urlObj.uid}` === `${uid}`){
+      if (`${urlObj.uid}` === `${uid}`) {
         urlObj = Object.assign(urlObj, options);
         this.data.playUrls[i] = urlObj;
       }
@@ -206,7 +210,7 @@ Page({
   /**
    * 根据playUrls的内容更新播放器
    */
-  refreshPlayers: function(options){
+  refreshPlayers: function (options) {
     let urls = this.data.playUrls;
     urls = urls.slice(0, max_user);
     Utils.log(`playing: ${JSON.stringify(urls)}`);
@@ -344,11 +348,14 @@ Page({
   /**
    * 初始化sdk推流
    */
-  initAgoraChannel: function(uid, channel) {
+  initAgoraChannel: function (uid, channel) {
     return new Promise((resolve, reject) => {
       let client = new AgoraMiniappSDK.Client();
       //subscribe stream events
       this.subscribeEvents(client);
+      AgoraMiniappSDK.LOG.onLog = (text) => {
+        Utils.log(text);
+      };
       AgoraMiniappSDK.LOG.setLogLevel(-1);
       this.client = client;
       client.init(APPID, () => {
@@ -377,7 +384,7 @@ Page({
   /**
    * 注册stream事件
    */
-  subscribeEvents: function(client){
+  subscribeEvents: function (client) {
     client.on("stream-added", uid => {
       Utils.log(`stream ${uid} added`);
       client.subscribe(uid, url => {
@@ -386,7 +393,7 @@ Page({
         //important, play/push sequence decide the layout z-index
         //to put pusher bottom, we have to wait until pusher loaded
         //and then play other streams
-        if(!this.data.pushing){
+        if (!this.data.pushing) {
           this.refreshPlayers();
         }
       }, e => {
@@ -412,7 +419,7 @@ Page({
       let code = errObj.code || 0;
       let reason = errObj.reason || "";
       Utils.log(`error: ${code}, reason: ${reason}`);
-      if(`${code}` === `${901}`){
+      if (`${code}` === `${901}`) {
         this.reconnectTimer = setTimeout(() => {
           this.reconnect();
         }, 5000);
@@ -428,7 +435,7 @@ Page({
       playUrls: [],
       pushing: true,
       pushUrl: ""
-    }, () =>  {
+    }, () => {
       // this is setData callback
       this.initAgoraChannel(uid, channel).then(url => {
         Utils.log(`re-join channel: ${channel}, uid: ${uid}`);
