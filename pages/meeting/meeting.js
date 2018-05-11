@@ -420,6 +420,11 @@ Page({
       let reason = errObj.reason || "";
       Utils.log(`error: ${code}, reason: ${reason}`);
       if (`${code}` === `${901}`) {
+        wx.showToast({
+          title: `链接断开`,
+          icon: 'none',
+          duration: 2000
+        });
         this.reconnectTimer = setTimeout(() => {
           this.reconnect();
         }, 5000);
