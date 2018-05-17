@@ -73,7 +73,7 @@ Page({
       })
     } else {
       wx.navigateTo({
-        url: `../meeting/meeting?channel=${value}&uid=${uid}&name=${app.globalData.userInfo.nickName}`
+        url: `../meeting/meeting?channel=${value}&uid=${uid}&name=`
       });
     }
   },
