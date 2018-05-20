@@ -43,7 +43,6 @@ Page({
     wx.setKeepScreenOn({
       keepScreenOn: true
     });
-    Utils.getUserInfo(app, () => { });
   },
 
   /**
@@ -56,12 +55,15 @@ Page({
 
     Promise.all([this.requestPermissions(), this.requestContainerSize(), this.initAgoraChannel(uid, channel)]).then(values => {
       let url = values[2];
+      let pushUrl = url;
 
       Utils.log(`channel: ${channel}, uid: ${uid}`);
-      Utils.log(`pushing ${url}`);
+      Utils.log(`pushing ${pushUrl}`);
       let size = this.layouter.adaptPusherSize(1);
+
+
       this.setData({
-        pushUrl: url,
+        pushUrl: pushUrl,
         pushWidth: size.width,
         pushHeight: size.height,
         totalUser: 1
@@ -443,11 +445,14 @@ Page({
     }, () => {
       // this is setData callback
       this.initAgoraChannel(uid, channel).then(url => {
+        let pushUrl = url;
         Utils.log(`re-join channel: ${channel}, uid: ${uid}`);
-        Utils.log(`re-pushing ${url}`);
+        Utils.log(`re-pushing ${pushUrl}`);
         let size = this.layouter.adaptPusherSize(1);
+
+
         this.setData({
-          pushUrl: url,
+          pushUrl: pushUrl,
           pushWidth: size.width,
           pushHeight: size.height,
           totalUser: 1

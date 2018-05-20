@@ -80,24 +80,6 @@ const checkSystemInfo = () => {
   }
 }
 
-const getUserInfo = (app, cb) => {
-  if (!app.globalData.userInfo) {
-    // 由于 getUserInfo 是网络请求，可能会在 Page.onLoad 之后才返回
-    // 所以此处加入 callback 以防止这种情况
-    requestPermission("scope.userInfo", () => {
-      wx.getUserInfo({
-        success(e) {
-          let userinfo = JSON.parse(e.rawData);
-          app.globalData.userInfo = userinfo;
-          cb(userinfo);
-        }
-      })
-    });
-  } else {
-    cb(app.globalData.userInfo);
-  }
-}
-
   module.exports = {
     getUid: getUid,
     checkSystemInfo: checkSystemInfo,
@@ -105,5 +87,4 @@ const getUserInfo = (app, cb) => {
     requestPermission: requestPermission,
     log: log,
     getLogs: function () { return logitems },
-    getUserInfo: getUserInfo
   }

@@ -19,12 +19,13 @@ Page({
   onLoad: function (options) {
     this.channel = "";
     this.uid = Utils.getUid();
-    Utils.getUserInfo(app, info => {
+    let userInfo = wx.getStorageSync("userInfo");
+    if (userInfo){
       this.setData({
         hasUserInfo: true,
-        userInfo: info
-      })
-    });
+        userInfo: userInfo
+      });
+    }
   },
 
   /**
@@ -60,9 +61,20 @@ Page({
 
   },
 
+  onGotUserInfo: function(e){
+    let userInfo = e.detail.userInfo || {};
+    wx.setStorage({
+      key: 'userInfo',
+      data: userInfo,
+    })
+    this.onJoin();
+  },
+
   
   onJoin: function () {
     let value = this.channel || "";
+    let userInfo = app.globalData.userInfo || {};
+    let nickName = userInfo.nickName || "";
 
     let uid = this.uid;
     if (!value) {
@@ -73,7 +85,7 @@ Page({
       })
     } else {
       wx.navigateTo({
-        url: `../meeting/meeting?channel=${value}&uid=${uid}&name=`
+        url: `../meeting/meeting?channel=${value}&uid=${uid}&name=${nickName}`
       });
     }
   },

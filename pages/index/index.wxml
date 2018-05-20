@@ -13,7 +13,7 @@
     <view class="inputWrapper">
       <input placeholder-style='color:#63C5E6' class="channelInput" placeholder='输入房间名' bindinput="onInputChannel" bindconfirm="onInputChannel" bindblur="onInputChannel"></input>
     </view>
-    <button disabled="{{disableJoin}}" class="joinBtn" bindtap="onJoin">加入房间</button>
+    <button open-type="getUserInfo" bindgetuserinfo="onGotUserInfo" disabled="{{disableJoin}}" class="joinBtn">加入房间</button>
   </view>
   <view class="footer flex-center-column">
     <text>Powered by Agora</text>
