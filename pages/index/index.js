@@ -84,9 +84,16 @@ Page({
         duration: 2000
       })
     } else {
-      wx.navigateTo({
-        url: `../meeting/meeting?channel=${value}&uid=${uid}&name=${nickName}`
-      });
+      if(value === "agora") {
+        // go to test page if channel name is agora
+        wx.navigateTo({
+          url: `../test/test`
+        });
+      } else {
+        wx.navigateTo({
+          url: `../meeting/meeting?channel=${value}&uid=${uid}&name=${nickName}`
+        });
+      }
     }
   },
   onInputChannel: function (e) {
