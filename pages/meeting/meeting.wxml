@@ -10,7 +10,7 @@
     </view>
     <block wx:for="{{playUrls}}" wx:key="key">
       <view class="play-container" style="left:{{item.left}}px; top:{{item.top}}px; width: {{item.width}}px; height: {{item.height}}px; ">
-        <live-player id="player-{{item.uid}}" src="{{item.src}}" mode="RTC" class="player" bindstatechange="playerStateChange" object-fit="fillCrop" style="height:{{item.height}}px; position: absolute; width: 100%; top: 0; z-index: 99;" autoplay="true" />
+        <live-player id="player-{{item.uid}}" src="{{item.src}}" mode="RTC" class="player" min-cache="0.1" max-cache="0.3" bindstatechange="playerStateChange" object-fit="fillCrop" style="height:{{item.height}}px; position: absolute; width: 100%; top: 0; z-index: 99;" autoplay="true" />
         <cover-view wx-if="{{item.loading}}" class="sud flex-center-column" style="position: absolute; width: 100%; height:{{item.height}}px;justify-content:center">
           <cover-image style="width: 128px;height:103px" src="../../images/loading.png"></cover-image>
         </cover-view>
@@ -25,11 +25,11 @@
   </view>
   <view class="footer flex-center-column">
     <view class="toolbar">
-      <button plain="true" class="mic {{muted?'muted': ''}}" bindtap='onMute'></button>
-      <button plain="true" class="camera" bindtap='onSwitchCamera'></button>
-      <button plain="true" class="hangup" bindtap='onLeave'></button>
-      <button plain="true" class="makeup {{makeup?'':'off'}}" bindtap='onMakeup'></button>
-      <button plain="true" class="log" bindtap='onSubmitLog'></button>
+      <button plain="true" class="mic {{muted?'muted': ''}} btn" bindtap='onMute'></button>
+      <button plain="true" hover-class="hover" class="camera btn" bindtap='onSwitchCamera'></button>
+      <button plain="true" hover-class="hover" class="hangup btn" bindtap='onLeave'></button>
+      <button plain="true" class="makeup {{makeup?'':'off'}} btn" bindtap='onMakeup'></button>
+      <button plain="true" hover-class="hover" class="log btn" bindtap='onSubmitLog'></button>
     </view>
   </view>
 </view>

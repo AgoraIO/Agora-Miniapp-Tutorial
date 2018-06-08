@@ -52,6 +52,10 @@ const getUid = () => {
   return uid;
 }
 
+const mashupUrl = (url, channel) => {
+  return url;
+}
+
 const checkSystemInfo = () => {
   if (!systemInfoChecked) {
     systemInfoChecked = true;
@@ -87,4 +91,5 @@ const checkSystemInfo = () => {
     requestPermission: requestPermission,
     log: log,
     getLogs: function () { return logitems },
+    mashupUrl: mashupUrl
   }

@@ -55,7 +55,7 @@ Page({
 
     Promise.all([this.requestPermissions(), this.requestContainerSize(), this.initAgoraChannel(uid, channel)]).then(values => {
       let url = values[2];
-      let pushUrl = url;
+      let pushUrl = Utils.mashupUrl(url, channel);
 
       Utils.log(`channel: ${channel}, uid: ${uid}`);
       Utils.log(`pushing ${pushUrl}`);
@@ -445,7 +445,7 @@ Page({
     }, () => {
       // this is setData callback
       this.initAgoraChannel(uid, channel).then(url => {
-        let pushUrl = url;
+        let pushUrl = Utils.mashupUrl(url, channel);
         Utils.log(`re-join channel: ${channel}, uid: ${uid}`);
         Utils.log(`re-pushing ${pushUrl}`);
         let size = this.layouter.adaptPusherSize(1);
