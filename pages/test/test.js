@@ -6,7 +6,8 @@ Page({
    */
   data: {
     playUrl: "",
-    pushUrl: ""
+    pushUrl: "",
+    debug: true
   },
 
   /**
@@ -68,6 +69,12 @@ Page({
    */
   onShareAppMessage: function () {
   
+  },
+
+  switchDebug() {
+    this.setData({
+      debug: !this.data.debug
+    })
   },
 
   startPushing: function(e) {

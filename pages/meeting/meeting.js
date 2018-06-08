@@ -30,6 +30,14 @@ Page({
     let manager = this;
     this.name = options.name;
     this.channel = options.channel;
+    if(/^sdktest.*$/.test(this.channel)) {
+      this.testEnv = true
+      wx.showModal({
+        title: '提示',
+        content: '您正处于测试环境',
+        showCancel: false
+      })
+    }
     this.uid = Utils.getUid();
     this.ts = new Date().getTime();
     this.containerSize = { width: 0, height: 0 };
@@ -352,7 +360,14 @@ Page({
    */
   initAgoraChannel: function (uid, channel) {
     return new Promise((resolve, reject) => {
-      let client = new AgoraMiniappSDK.Client();
+      let client = {}
+      if(this.testEnv) {
+        client = new AgoraMiniappSDK.Client({
+          server: ["wss://miniapp.agoraio.cn/115-239-228-77/"]
+        });
+      } else {
+        client = new AgoraMiniappSDK.Client()
+      }
       //subscribe stream events
       this.subscribeEvents(client);
       AgoraMiniappSDK.LOG.onLog = (text) => {
