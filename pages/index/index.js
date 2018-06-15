@@ -19,6 +19,7 @@ Page({
   onLoad: function (options) {
     this.channel = "";
     this.uid = Utils.getUid();
+    this.lock = false;
     let userInfo = wx.getStorageSync("userInfo");
     if (userInfo){
       this.setData({
@@ -39,6 +40,7 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
+    this.unlockJoin();
   },
 
   /**
@@ -69,8 +71,21 @@ Page({
     })
     this.onJoin();
   },
-
+  /**
+   * check if join is locked now, this is mainly to prevent from clicking join btn to start multiple new pages
+   */
+  checkJoinLock: function() {
+    return !(this.lock || false);
+  },
   
+  lockJoin: function() {
+    this.lock = true;
+  },
+
+  unlockJoin: function() {
+    this.lock = false;
+  },
+
   onJoin: function () {
     let value = this.channel || "";
     let userInfo = app.globalData.userInfo || {};
@@ -84,15 +99,18 @@ Page({
         duration: 2000
       })
     } else {
-      if(value === "agora") {
-        // go to test page if channel name is agora
-        wx.navigateTo({
-          url: `../test/test`
-        });
-      } else {
-        wx.navigateTo({
-          url: `../meeting/meeting?channel=${value}&uid=${uid}&name=${nickName}`
-        });
+      if(this.checkJoinLock()) {
+        this.lockJoin();
+        if (value === "agora") {
+          // go to test page if channel name is agora
+          wx.navigateTo({
+            url: `../test/test`
+          });
+        } else {
+          wx.navigateTo({
+            url: `../meeting/meeting?channel=${value}&uid=${uid}&name=${nickName}`
+          });
+        }
       }
     }
   },
