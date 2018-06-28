@@ -30,7 +30,7 @@ Page({
     let manager = this;
     this.name = options.name;
     this.channel = options.channel;
-    if(/^sdktest.*$/.test(this.channel)) {
+    if (/^sdktest.*$/.test(this.channel)) {
       this.testEnv = true
       wx.showModal({
         title: '提示',
@@ -104,11 +104,11 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
-    Utils.log(`restart pushing...`);
-    const context = wx.createLivePusherContext();
-    context && context.start();
+    // Utils.log(`restart pushing...`);
+    // const context = wx.createLivePusherContext();
+    // context && context.start();
 
-    Utils.log(`re-register listeners...`);
+    // Utils.log(`re-register listeners...`);
   },
 
   /**
@@ -125,23 +125,26 @@ Page({
     Utils.log(`onUnload`);
     const context = wx.createLivePusherContext();
     context && context.stop();
-    if (this.reconnectTimer) {
-      Utils.log(`clear timeout`);
-      clearTimeout(this.reconnectTimer);
-    }
-    this.reconnectTimer = null;
     this.stopPlayers(this.data.playUrls);
     try {
       this.client && this.client.unpublish();
+      this.client && this.client.leave();
     } catch (e) {
       Utils.log(`unpublish failed`);
     };
-    this.client && this.client.leave();
   },
 
   onLeave: function () {
-    wx.navigateBack({
-    });
+    if(getCurrentPages().length > 1) {
+      //have pages on stack
+      wx.navigateBack({
+      });
+    } else {
+      //no page on stack, usually means start from shared links
+      wx.redirectTo({
+        url: '../index/index',
+      });
+    }
   },
 
   /**
@@ -165,7 +168,7 @@ Page({
 
   },
 
-  recorderInfo: function(info) {
+  recorderInfo: function (info) {
     Utils.log(`live-pusher info: ${JSON.stringify(info)}`);
   },
 
@@ -176,9 +179,14 @@ Page({
     Utils.log(`live-pusher code: ${e.detail.code}`)
     if (e.detail.code === -1307) {
       //re-push
-      Utils.log('live-pusher stopped, try to restart...', "error")
+      Utils.log('live-pusher stopping', "error")
       const context = wx.createLivePusherContext();
-      context && context.start();
+      context.stop({
+        success: function () {
+          Utils.log('live-pusher replay', "error")
+          context && context.start();
+        }
+      });
     }
     if (e.detail.code === 1008 && this.data.pushing) {
       //started
@@ -361,9 +369,9 @@ Page({
   initAgoraChannel: function (uid, channel) {
     return new Promise((resolve, reject) => {
       let client = {}
-      if(this.testEnv) {
+      if (this.testEnv) {
         client = new AgoraMiniappSDK.Client({
-          server: ["wss://miniapp.agoraio.cn/115-239-228-77/"]
+          servers: ["wss://miniapp.agoraio.cn/115-239-228-77/"]
         });
       } else {
         client = new AgoraMiniappSDK.Client()
@@ -373,7 +381,7 @@ Page({
       AgoraMiniappSDK.LOG.onLog = (text) => {
         Utils.log(text);
       };
-      AgoraMiniappSDK.LOG.setLogLevel(-1);
+      AgoraMiniappSDK.LOG.setLogLevel(1);
       this.client = client;
       client.init(APPID, () => {
         Utils.log(`client init success`);
@@ -402,23 +410,51 @@ Page({
    * 注册stream事件
    */
   subscribeEvents: function (client) {
-    client.on("stream-added", uid => {
+    client.on("video-rotation", (e) => {
+      let uid = e.uid;
+      let rotation = e.rotation;
+      let playUrls = this.data.playUrls || [];
+      for(let i = 0; i < playUrls.length; i++) {
+        let url = playUrls[i];
+        if(`${uid}` === `${url.uid}`) {
+          url.rotation = rotation;
+          url.orientation =  rotation === 90 || rotation === 270 ? "vertical" : "horizontal";
+          break;
+        }
+      }
+      this.refreshPlayers();
+    });
+    client.on("stream-added", e => {
+      let uid = e.uid;
       Utils.log(`stream ${uid} added`);
       client.subscribe(uid, url => {
         Utils.log(`stream subscribed successful`);
-        this.data.playUrls.push({ key: uid, uid: uid, src: url });
+        let playUrl = null;
+        for( let i = 0; i < this.data.playUrls.length; i++) {
+          let item = this.data.playUrls[i];
+          if(`${item.uid}` === `${uid}`) {
+            //if existing, update
+            playUrl = item;
+            playUrl.src = url;
+            break;
+          }
+        }
+
+        if(!playUrl) {
+          //if not existing, push new to array
+          this.data.playUrls.push({ key: uid, uid: uid, src: url, rotation: 0 });
+        }
         //important, play/push sequence decide the layout z-index
         //to put pusher bottom, we have to wait until pusher loaded
         //and then play other streams
-        if (!this.data.pushing) {
-          this.refreshPlayers();
-        }
+        this.refreshPlayers();
       }, e => {
         Utils.log(`stream subscribed failed ${e.code} ${e.reason}`);
       });
     });
 
-    client.on("stream-removed", uid => {
+    client.on("stream-removed", e => {
+      let uid = e.uid;
       Utils.log(`stream ${uid} removed`);
       this.data.playUrls = this.data.playUrls.filter(urlObj => {
         return `${urlObj.uid}` !== `${uid}`;
@@ -442,43 +478,28 @@ Page({
           icon: 'none',
           duration: 2000
         });
-        this.reconnectTimer = setTimeout(() => {
-          this.reconnect();
-        }, 5000);
       }
     });
-  },
 
-  reconnect: function () {
-    Utils.log(`start reconnect`);
-    let channel = this.channel;
-    let uid = this.uid;
-    this.setData({
-      playUrls: [],
-      pushing: true,
-      pushUrl: ""
-    }, () => {
-      // this is setData callback
-      this.initAgoraChannel(uid, channel).then(url => {
-        let pushUrl = Utils.mashupUrl(url, channel);
-        Utils.log(`re-join channel: ${channel}, uid: ${uid}`);
-        Utils.log(`re-pushing ${pushUrl}`);
-        let size = this.layouter.adaptPusherSize(1);
-
-
+    client.on('reconnect-start', (e) => {
+      let uid = e.uid;
+      Utils.log(`start-reconnect, ${uid}`);
+    })
+    client.on('reconnect-end', (e) => {
+      let uid = e.uid;
+      Utils.log(`end-reconnect, ${uid}`);
+    })
+    client.on('rejoin', (e) => {
+      let uid = e.uid;
+      Utils.log(`rejoin, ${uid}`);
+      client.publish(url => {
+        Utils.log(`client publish success`);
         this.setData({
-          pushUrl: pushUrl,
-          pushWidth: size.width,
-          pushHeight: size.height,
-          totalUser: 1
-        });
-      }).catch(e => {
-        wx.showToast({
-          title: `重连失败: ${e.code} ${e.reason}`,
-          icon: 'none',
-          duration: 2000
-        });
+          pushUrl: url
+        })
+      }, e => {
+        Utils.log(`client publish failed: ${e.code} ${e.reason}`);
       });
-    });
+    })
   }
 })

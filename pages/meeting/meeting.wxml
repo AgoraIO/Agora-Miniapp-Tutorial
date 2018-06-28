@@ -2,7 +2,7 @@
 <view id="main" class="content agora-bg flex-center-column">
   <view id="video-container" class="video-container n{{totalUser}}">
     <view class="pusher-container" style="width: {{pushWidth}}px; height: {{pushHeight}}px; position: absolute;">
-       <live-pusher wx-if="{{pushUrl!==''}}" style="height:{{pushHeight}}px; position: absolute; width: 100%" url="{{pushUrl}}" mode="RTC" class="camera" bindnetstatus="recorderInfo" bindstatechange="recorderStateChange" muted="{{muted}}" beauty="{{makeup?'5':'0'}}" max-bitrate="500" waiting-image="https://webdemo.agora.io/away.png"
+       <live-pusher wx-if="{{pushUrl!==''}}" style="height:{{pushHeight}}px; position: absolute; width: 100%; " url="{{pushUrl}}" mode="RTC" class="camera" bindnetstatus="recorderInfo" bindstatechange="recorderStateChange" muted="{{muted}}" beauty="{{makeup?'5':'0'}}" max-bitrate="500" waiting-image="https://webdemo.agora.io/away.png"
         autopush="true" /> 
       <cover-view wx-if="{{pushing}}" class="sud flex-center-column" style="position: absolute; width: 100%; height: 100%;justify-content:center">
         <cover-image style="width: 128px;height:103px" src="../../images/loading.png"></cover-image>
@@ -10,7 +10,7 @@
     </view>
     <block wx:for="{{playUrls}}" wx:key="key">
       <view class="play-container" style="left:{{item.left}}px; top:{{item.top}}px; width: {{item.width}}px; height: {{item.height}}px; ">
-        <live-player id="player-{{item.uid}}" src="{{item.src}}" mode="RTC" class="player" min-cache="0.1" max-cache="0.3" bindstatechange="playerStateChange" object-fit="fillCrop" style="height:{{item.height}}px; position: absolute; width: 100%; top: 0; z-index: 99;" autoplay="true" />
+        <live-player id="player-{{item.uid}}" src="{{item.src}}" mode="RTC" class="player" orientation="{{item.orientation}}" min-cache="0.1" max-cache="0.3" bindstatechange="playerStateChange" object-fit="fillCrop" style="height:{{item.height}}px; position: absolute; width: 100%; top: 0; z-index: 99;" autoplay="true" />
         <cover-view wx-if="{{item.loading}}" class="sud flex-center-column" style="position: absolute; width: 100%; height:{{item.height}}px;justify-content:center">
           <cover-image style="width: 128px;height:103px" src="../../images/loading.png"></cover-image>
         </cover-view>

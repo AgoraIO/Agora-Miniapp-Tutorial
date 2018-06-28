@@ -10,12 +10,24 @@ class Layouter{
 
     switch (userCount) {
       case 1:
-      case 2:
-      case 3:
-      case 4:
         return {
           width: videoContainerWidth,
           height: videoContainerHeight
+        };
+      case 2:
+        return {
+          width: videoContainerWidth,
+          height: videoContainerHeight / 2
+        };
+      case 3:
+        return {
+          width: videoContainerWidth,
+          height: videoContainerHeight - videoContainerWidth / 2
+        };
+      case 4:
+        return {
+          width: videoContainerWidth / 2,
+          height: videoContainerHeight / 2
         };
       case 5:
       case 6:
@@ -42,25 +54,33 @@ class Layouter{
       height: videoContainerHeight
     };
     let pusherSize = this.adaptPusherSize(1 + urlObjs.length);
-    if (urlObjs.length > 0 && urlObjs.length <= 3) {
-      urlObjs[0].width = size.width / 4;
-      urlObjs[0].height = size.height / 4;
-      urlObjs[0].top = size.height - urlObjs[0].height - 10;
-      urlObjs[0].left = (size.width / 3 - urlObjs[0].width) / 2;
-
-      if (urlObjs.length >= 2) {
-        urlObjs[1].width = size.width / 4;
-        urlObjs[1].height = size.height / 4;
-        urlObjs[1].top = size.height - urlObjs[1].height - 10;
-        urlObjs[1].left = size.width / 3 + urlObjs[0].left;
-      }
-
-      if (urlObjs.length === 3) {
-        urlObjs[2].width = size.width / 4;
-        urlObjs[2].height = size.height / 4;
-        urlObjs[2].top = size.height - urlObjs[1].height - 10;
-        urlObjs[2].left = size.width * 2 / 3 + urlObjs[0].left;
-      }
+    if (urlObjs.length === 1) {
+      urlObjs[0].width = size.width;
+      urlObjs[0].height = size.height / 2;
+      urlObjs[0].top = urlObjs[0].height;
+      urlObjs[0].left = 0;
+    } else if (urlObjs.length === 2) {
+      urlObjs[0].width = size.width / 2;
+      urlObjs[0].height = size.width / 2;
+      urlObjs[0].top = size.height - urlObjs[0].height;
+      urlObjs[0].left = 0;
+      urlObjs[1].width = size.width / 2;
+      urlObjs[1].height = size.width / 2;
+      urlObjs[1].top = size.height - urlObjs[1].height;
+      urlObjs[1].left = urlObjs[0].width;
+    } else if (urlObjs.length === 3) {
+      urlObjs[0].width = size.width / 2;
+      urlObjs[0].height = size.height / 2;
+      urlObjs[0].top = 0;
+      urlObjs[0].left = size.width / 2;
+      urlObjs[1].width = size.width / 2;
+      urlObjs[1].height = size.height / 2;
+      urlObjs[1].top = size.height / 2;
+      urlObjs[1].left = 0;
+      urlObjs[2].width = size.width / 2;
+      urlObjs[2].height = size.height / 2;
+      urlObjs[2].top = size.height / 2;
+      urlObjs[2].left = size.width / 2;
     } else if (urlObjs.length === 4) {
       urlObjs[0].width = pusherSize.width;
       urlObjs[0].height = pusherSize.height;
