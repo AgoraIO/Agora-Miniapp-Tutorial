@@ -65,24 +65,31 @@ Page({
     let uid = this.uid;
     Utils.log(`onReady`);
 
-    Promise.all([this.requestPermissions(), this.requestContainerSize(), this.initAgoraChannel(uid, channel)]).then(values => {
-      let url = values[2];
-      let pushUrl = Utils.mashupUrl(url, channel);
+    Promise.all([this.requestPermissions(), this.requestContainerSize()]).then(values => {
+      this.initAgoraChannel(uid, channel).then(url => {
+        let pushUrl = Utils.mashupUrl(url, channel);
 
-      Utils.log(`channel: ${channel}, uid: ${uid}`);
-      Utils.log(`pushing ${pushUrl}`);
-      let size = this.layouter.adaptPusherSize(1);
-
-
-      this.setData({
-        pushUrl: pushUrl,
-        pushWidth: size.width,
-        pushHeight: size.height,
-        totalUser: 1
+        Utils.log(`channel: ${channel}, uid: ${uid}`);
+        Utils.log(`pushing ${pushUrl}`);
+        let size = this.layouter.adaptPusherSize(1);
+        this.setData({
+          pushUrl: pushUrl,
+          pushWidth: size.width,
+          pushHeight: size.height,
+          totalUser: 1
+        });
+      }).catch(e => {
+        Utils.log(`init agora client failed: ${e}`);
+        wx.showToast({
+          title: `客户端初始化失败`,
+          icon: 'none',
+          duration: 5000
+        });
       });
     }).catch(e => {
+      Utils.log(`request permission/size failed: ${e}`);
       wx.showToast({
-        title: `初始化失败: ${e.code} ${e.reason}`,
+        title: `程序初始化失败`,
         icon: 'none',
         duration: 5000
       });
