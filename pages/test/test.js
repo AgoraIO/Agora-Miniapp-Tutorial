@@ -95,5 +95,15 @@ Page({
       let context = wx.createLivePlayerContext("player", this);
       context.play();
     });
+  },
+
+  onPause: function() {
+    let context = wx.createLivePusherContext(this);
+    context && context.pause();
+  },
+
+  onResume: function() {
+    let context = wx.createLivePusherContext(this);
+    context && context.resume();
   }
 })

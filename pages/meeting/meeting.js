@@ -20,7 +20,9 @@ Page({
     pushWidth: 0,
     pushHeight: 0,
     totalUser: 1,
-    pushing: true
+    pushing: true,
+    rotationMap: {},
+    debug: false
   },
 
   /**
@@ -29,7 +31,10 @@ Page({
   onLoad: function (options) {
     let manager = this;
     this.name = options.name;
+    this.leaving = false;
     this.channel = options.channel;
+    this._cachePlayersData = null;
+
     if (/^sdktest.*$/.test(this.channel)) {
       this.testEnv = true
       wx.showModal({
@@ -43,7 +48,6 @@ Page({
     this.containerSize = { width: 0, height: 0 };
     this.client = null;
     this.layouter = null;
-    this.reconnectTimer = null;
     wx.setNavigationBarTitle({
       title: `${this.channel}(${this.uid})`
     });
@@ -88,13 +92,12 @@ Page({
   stopPlayers: function (users) {
     Utils.log(`stop players: ${JSON.stringify(users)}`);
     let uid = this.uid;
-    users.forEach(user => {
+    users && users.forEach(user => {
       if (`${user.uid}` === `${uid}`) {
         return;
       }
       Utils.log(`stop player ${user.uid}`);
-      let context = wx.createLivePlayerContext(`player-${user.uid}`, this);
-      context.stop();
+      this.stopPlayer(user.uid);
     });
   },
 
@@ -126,16 +129,32 @@ Page({
     const context = wx.createLivePusherContext();
     context && context.stop();
     this.stopPlayers(this.data.playUrls);
+
+    let pages = getCurrentPages();
+    if (pages.length > 1) {
+      //unlock join
+      let indexPage = pages[0];
+      indexPage.unlockJoin();
+    }
+
     try {
       this.client && this.client.unpublish();
-      this.client && this.client.leave();
     } catch (e) {
-      Utils.log(`unpublish failed`);
-    };
+      Utils.log(`unpublish failed ${e}`);
+    }
+    this.client && this.client.leave();
   },
 
   onLeave: function () {
-    if(getCurrentPages().length > 1) {
+    if(!this.leaving){
+      this.leaving = true;
+      this.navigateBack();
+    }
+  },
+
+  navigateBack: function(){
+    Utils.log(`attemps to navigate back`);
+    if (getCurrentPages().length > 1) {
       //have pages on stack
       wx.navigateBack({
       });
@@ -169,7 +188,7 @@ Page({
   },
 
   recorderInfo: function (info) {
-    Utils.log(`live-pusher info: ${JSON.stringify(info)}`);
+    // Utils.log(`live-pusher info: ${JSON.stringify(info)}`);
   },
 
   /**
@@ -188,12 +207,25 @@ Page({
         }
       });
     }
-    if (e.detail.code === 1008 && this.data.pushing) {
+    if (e.detail.code === 1008) {
       //started
       Utils.log(`live-pusher started`);
-      this.refreshPlayers({
-        pushing: false
-      })
+
+      // if(!this.timer){
+      //   this.timer = setInterval(() => {
+      //     Utils.log(`try to stop test`);
+      //     let pusher = wx.createLivePusherContext(this);
+      //     pusher && pusher.stop({
+      //       success:() => {
+      //         pusher && pusher.start();
+      //       },
+      //       fail:() => {
+      //         Utils.log(`stop failed`);
+      //         pusher && pusher.start();
+      //       }
+      //     })
+      //   }, 10 * 1000);
+      // }
     }
   },
 
@@ -242,7 +274,12 @@ Page({
       pushHeight: size.height
     }, options);
 
-    this.setData(data);
+    this._cachePlayersData = data;
+    Utils.log(`put into debounce`);
+    Utils.debounce(() => {
+      Utils.log(`exec debounce`);
+      this.setData(this._cachePlayersData);
+    }, 200)();
   },
 
   /**
@@ -306,6 +343,9 @@ Page({
    */
   onSubmitLog: function () {
     let page = this;
+    this.setData({
+      debug: !this.data.debug
+    })
     wx.showModal({
       title: '遇到使用问题?',
       content: '点击确定可以上传日志，帮助我们了解您在使用过程中的问题',
@@ -381,7 +421,7 @@ Page({
       AgoraMiniappSDK.LOG.onLog = (text) => {
         Utils.log(text);
       };
-      AgoraMiniappSDK.LOG.setLogLevel(1);
+      AgoraMiniappSDK.LOG.setLogLevel(-1);
       this.client = client;
       client.init(APPID, () => {
         Utils.log(`client init success`);
@@ -401,10 +441,19 @@ Page({
           reject(e)
         })
       }, e => {
-        Utils.log(`client init failed: ${e.code} ${e.reason}`);
+        Utils.log(`client init failed: ${e} ${e.code} ${e.reason}`);
         reject(e);
       });
     });
+  },
+  stopPlayer:function(uid) {
+    let context = wx.createLivePlayerContext(`player-${uid}`, this);
+    context && context.stop({success: function() {Utils.log(`player ${uid} stopped`)}});
+  },
+  getOrientation:function(rotation) {
+    let orientation = rotation === 90 || rotation === 270 ? "horizontal" : "vertical";
+    Utils.log(`rotation: ${rotation}, orientation: ${orientation}`)
+    return orientation;
   },
   /**
    * 注册stream事件
@@ -418,7 +467,7 @@ Page({
         let url = playUrls[i];
         if(`${uid}` === `${url.uid}`) {
           url.rotation = rotation;
-          url.orientation =  rotation === 90 || rotation === 270 ? "vertical" : "horizontal";
+          url.orientation = this.getOrientation(rotation);
           break;
         }
       }
@@ -427,7 +476,7 @@ Page({
     client.on("stream-added", e => {
       let uid = e.uid;
       Utils.log(`stream ${uid} added`);
-      client.subscribe(uid, url => {
+      client.subscribe(uid, (url, rotation) => {
         Utils.log(`stream subscribed successful`);
         let playUrl = null;
         for( let i = 0; i < this.data.playUrls.length; i++) {
@@ -442,29 +491,25 @@ Page({
 
         if(!playUrl) {
           //if not existing, push new to array
-          this.data.playUrls.push({ key: uid, uid: uid, src: url, rotation: 0 });
+          this.data.playUrls.push({ key: uid, uid: uid, src: url, rotation: rotation, orientation: this.getOrientation(rotation), loading: true});
         }
         //important, play/push sequence decide the layout z-index
         //to put pusher bottom, we have to wait until pusher loaded
         //and then play other streams
         this.refreshPlayers();
       }, e => {
-        Utils.log(`stream subscribed failed ${e.code} ${e.reason}`);
+        Utils.log(`stream subscribed failed ${e} ${e.code} ${e.reason}`);
       });
     });
 
     client.on("stream-removed", e => {
       let uid = e.uid;
       Utils.log(`stream ${uid} removed`);
+      this.stopPlayer(uid);
       this.data.playUrls = this.data.playUrls.filter(urlObj => {
         return `${urlObj.uid}` !== `${uid}`;
       });
-      //important, play/push sequence decide the layout z-index
-      //to put pusher bottom, we have to wait until pusher loaded
-      //and then play other streams
-      if (!this.data.pushing) {
-        this.refreshPlayers();
-      }
+      this.refreshPlayers();
     });
 
     client.on("error", err => {
@@ -484,6 +529,9 @@ Page({
     client.on('reconnect-start', (e) => {
       let uid = e.uid;
       Utils.log(`start-reconnect, ${uid}`);
+      let pusher = wx.createLivePusherContext(this);
+      pusher && pusher.stop();
+      this.stopPlayers();
     })
     client.on('reconnect-end', (e) => {
       let uid = e.uid;
