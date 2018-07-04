@@ -6,6 +6,9 @@ const AgoraMiniappSDK = require("../../lib/mini-app-sdk-production.js");
 const max_user = 6;
 const Layouter = require("../../utils/layout.js");
 const APPID = require("../../utils/config.js").APPID;
+const Uploader = require("../../utils/uploader.js")
+const LogUploader = Uploader.LogUploader;
+const LogUploaderTask = Uploader.LogUploaderTask;
 
 Page({
 
@@ -320,29 +323,51 @@ Page({
    * 上传日志
    */
   uploadLogs: function () {
-    // let logs = Utils.
-    wx.request({
-      url: 'https://webdemo.agora.io/miniapps/restful/v1/logs',
-      method: 'post',
-      data: {
-        logs: Utils.getLogs(),
-        channel: this.channel
-      },
-      success: function (res) {
+    let logs = Utils.getLogs();
+
+    //test
+    // logs = [];
+    // for(let i = 0; i < 1000; i++) {
+    //   logs = logs.concat(Utils.getLogs());
+    // }
+
+    let totalLogs = logs.length;
+    let tasks = [];
+    let part = 0;
+    let ts = new Date().getTime();
+    // 1w logs per task slice
+    const sliceSize = 1000;
+    do {
+      let content = logs.splice(0, sliceSize);
+      tasks.push(new LogUploaderTask(content, this.channel, part++, ts));
+    } while(logs.length > sliceSize)
+    wx.showLoading({
+      title: '0%',
+      mask: true
+    })
+    LogUploader.off("progress").on("progress", e => {
+      let remain = e.remain;
+      let total = e.total;
+      Utils.log(`log upload progress ${total - remain}/${total}`);
+      if(remain === 0) {
+        wx.hideLoading();
         wx.showToast({
-          title: '上传成功',
-          icon: 'none',
-          duration: 2000
-        })
-      },
-      fail: function (e) {
-        wx.showToast({
-          title: '上传失败',
-          icon: 'none',
-          duration: 2000
+          title: `上传成功`,
+        });
+      } else {
+        wx.showLoading({
+          mask: true,
+          title: `${((total - remain) / total * 100).toFixed(2)}%`,
         })
       }
-    })
+    });
+    LogUploader.on("error"), e => {
+      wx.hideLoading();
+      wx.showToast({
+        title: `上传失败: ${e}`,
+      });
+    }
+    LogUploader.scheduleTasks(tasks);
   },
 
   /**
@@ -467,12 +492,14 @@ Page({
    */
   subscribeEvents: function (client) {
     client.on("video-rotation", (e) => {
+      Utils.log(`video rotated: ${e.rotation} ${e.uid}`)
       let uid = e.uid;
       let rotation = e.rotation;
       let playUrls = this.data.playUrls || [];
       for(let i = 0; i < playUrls.length; i++) {
         let url = playUrls[i];
         if(`${uid}` === `${url.uid}`) {
+          Utils.log(`update ${url.uid} rotation`);
           url.rotation = rotation;
           url.orientation = this.getOrientation(rotation);
           break;
@@ -484,7 +511,7 @@ Page({
       let uid = e.uid;
       Utils.log(`stream ${uid} added`);
       client.subscribe(uid, (url, rotation) => {
-        Utils.log(`stream subscribed successful`);
+        Utils.log(`stream ${uid} subscribed successful`);
         let playUrl = null;
         for( let i = 0; i < this.data.playUrls.length; i++) {
           let item = this.data.playUrls[i];
@@ -538,7 +565,7 @@ Page({
       Utils.log(`start-reconnect, ${uid}`);
       let pusher = wx.createLivePusherContext(this);
       pusher && pusher.stop();
-      this.stopPlayers();
+      this.stopPlayers(this.data.playUrls);
     })
     client.on('reconnect-end', (e) => {
       let uid = e.uid;
