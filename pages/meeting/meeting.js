@@ -208,34 +208,23 @@ Page({
     Utils.log(`live-pusher code: ${e.detail.code}`)
     if (e.detail.code === -1307) {
       //re-push
-      Utils.log('live-pusher stopping', "error")
-      const context = wx.createLivePusherContext();
-      context.stop({
-        success: function () {
-          Utils.log('live-pusher replay', "error")
-          context && context.start();
-        }
+      Utils.log('live-pusher stopping, requesting new', "error");
+      this.client.send({
+        action: "update_url",
+        role: "publish",
+        uid: parseInt(this.uid)
+      }, res => {
+        Utils.log(`url update success: ${res.url}`);
+        this.setData({
+          pushUrl: res.url
+        })
+      }, e => {
+        Utils.log(`url update failed: ${JSON.stringify(e)}`);
       });
     }
     if (e.detail.code === 1008) {
       //started
       Utils.log(`live-pusher started`);
-
-      // if(!this.timer){
-      //   this.timer = setInterval(() => {
-      //     Utils.log(`try to stop test`);
-      //     let pusher = wx.createLivePusherContext(this);
-      //     pusher && pusher.stop({
-      //       success:() => {
-      //         pusher && pusher.start();
-      //       },
-      //       fail:() => {
-      //         Utils.log(`stop failed`);
-      //         pusher && pusher.start();
-      //       }
-      //     })
-      //   }, 10 * 1000);
-      // }
     }
   },
 
@@ -563,9 +552,9 @@ Page({
     client.on('reconnect-start', (e) => {
       let uid = e.uid;
       Utils.log(`start-reconnect, ${uid}`);
-      let pusher = wx.createLivePusherContext(this);
-      pusher && pusher.stop();
-      this.stopPlayers(this.data.playUrls);
+      // let pusher = wx.createLivePusherContext(this);
+      // pusher && pusher.stop();
+      // this.stopPlayers(this.data.playUrls);
     })
     client.on('reconnect-end', (e) => {
       let uid = e.uid;
@@ -575,10 +564,14 @@ Page({
       let uid = e.uid;
       Utils.log(`rejoin, ${uid}`);
       client.publish(url => {
-        Utils.log(`client publish success`);
+        Utils.log(`client publish success: ${url}`);
+        let size = this.layouter.adaptPusherSize(1);
         this.setData({
-          pushUrl: url
-        })
+          pushUrl: url,
+          pushWidth: size.width,
+          pushHeight: size.height,
+          totalUser: 1
+        });
       }, e => {
         Utils.log(`client publish failed: ${e.code} ${e.reason}`);
       });
