@@ -92,6 +92,11 @@ Page({
     });
   },
 
+  onStopPushing: function(e) {
+    let context = wx.createLivePusherContext(this);
+    context.stop();
+  },
+
   startPlaying: function(e) {
     let url = e.detail.value;
     this.setData({

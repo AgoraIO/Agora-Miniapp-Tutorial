@@ -102,6 +102,7 @@ const checkSystemInfo = () => {
     formatTime: formatTime,
     requestPermission: requestPermission,
     log: log,
+    clearLogs: function () {logitems = []},
     getLogs: function () { return logitems },
     mashupUrl: mashupUrl,
     debounce: debounce

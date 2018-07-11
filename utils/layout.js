@@ -11,39 +11,56 @@ class Layouter{
     switch (userCount) {
       case 1:
         return {
+          x: 0,
+          y: 0,
           width: videoContainerWidth,
           height: videoContainerHeight
         };
       case 2:
         return {
-          width: videoContainerWidth,
-          height: videoContainerHeight / 2
+          x: 0,
+          y: (videoContainerHeight - videoContainerWidth / 2 * (4 / 3)) / 2,
+          width: videoContainerWidth / 2,
+          height: videoContainerWidth / 2 * (4 / 3)
         };
       case 3:
         return {
+          x: 0,
+          y: 0,
           width: videoContainerWidth,
           height: videoContainerHeight - videoContainerWidth / 2
         };
       case 4:
         return {
+          x: 0,
+          y: 0,
           width: videoContainerWidth / 2,
           height: videoContainerHeight / 2
         };
       case 5:
       case 6:
         return {
+          x: 0,
+          y: 0,
           width: videoContainerWidth * 2 / 3,
           height: videoContainerHeight * 3 / 5
         };
       case 7:
       default:
         return {
+          x: 0,
+          y: 0,
           width: videoContainerWidth / 2,
           height: videoContainerHeight / 3
         };
     }
 
-    return height;
+    return {
+      x: 0,
+      y: 0,
+      width: videoContainerWidth,
+      height: videoContainerHeight
+    };
   }
 
   adaptPlayerSize(urlObjs) {
@@ -55,10 +72,10 @@ class Layouter{
     };
     let pusherSize = this.adaptPusherSize(1 + urlObjs.length);
     if (urlObjs.length === 1) {
-      urlObjs[0].width = size.width;
-      urlObjs[0].height = size.height / 2;
-      urlObjs[0].top = urlObjs[0].height;
-      urlObjs[0].left = 0;
+      urlObjs[0].width = size.width / 2;
+      urlObjs[0].height = size.width / 2 * 4 / 3;
+      urlObjs[0].top = (size.height - size.width / 2 * 4 / 3) / 2;
+      urlObjs[0].left = urlObjs[0].width;
     } else if (urlObjs.length === 2) {
       urlObjs[0].width = size.width / 2;
       urlObjs[0].height = size.width / 2;

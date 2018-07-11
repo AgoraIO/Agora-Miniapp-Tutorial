@@ -17,4 +17,5 @@
   <text style="font-size: 30rpx; margin-right: 10rpx">Debug:</text> <switch checked="{{debug}}" bindchange="switchDebug" />
   <button bindtap="onPause">Pause</button>
   <button bindtap="onResume">Resume</button>
+  <button bindtap="onStopPushing">Stop</button>
 </view>
