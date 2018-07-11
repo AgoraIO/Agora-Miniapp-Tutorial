@@ -4,7 +4,7 @@
     <agora-pusher id="rtc-pusher" x="{{pushX}}" y="{{pushY}}" width="{{pushWidth}}" height="{{pushHeight}}" url="{{pushUrl}}" muted="{{muted}}" beauty="{{beauty}}" debug="{{debug}}" bindpushfailed="onPusherFailed">
     </agora-pusher>
      <block wx:for="{{playUrls}}" wx:key="key">
-      <agora-player id="rtc-player-{{item.uid}}" uid="{{item.uid}}" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}" debug="{{debug}}" url="{{item.src}}">
+      <agora-player id="rtc-player-{{item.uid}}" uid="{{item.uid}}" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}"  debug="{{debug}}" url="{{item.src}}">
       </agora-player>
     </block> 
   </view>
@@ -13,7 +13,7 @@
       <button plain="true" class="mic {{muted?'muted': ''}} btn" bindtap='onMute'></button>
       <button plain="true" hover-class="hover" class="camera btn" bindtap='onSwitchCamera'></button>
       <button plain="true" hover-class="hover" class="hangup btn" bindtap='onLeave'></button>
-      <button plain="true" class="makeup {{makeup?'':'off'}} btn" bindtap='onMakeup'></button>
+      <button plain="true" class="makeup {{beauty === 5 ?'':'off'}} btn" bindtap='onMakeup'></button>
       <button plain="true" hover-class="hover" class="log btn" bindtap='onSubmitLog'></button>
     </view>
   </view>

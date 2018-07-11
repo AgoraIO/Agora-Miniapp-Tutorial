@@ -40,7 +40,7 @@ Component({
     },
     beauty: {
       type: String,
-      value: 5
+      value: 0
     },
     aspect: {
       type: String,
@@ -77,19 +77,11 @@ Component({
    */
   methods: {
     start() {
-      if(!this.data.pusherContext){
-        Utils.log(`pusher context not exist`, "error");
-        return;
-      }
       Utils.log(`starting pusher`);
       this.data.pusherContext.start();
     },
 
     stop() {
-      if (!this.data.pusherContext) {
-        Utils.log(`pusher context not exist`, "error");
-        return;
-      }
       Utils.log(`stopping pusher`);
       this.data.pusherContext.stop();
     },
@@ -135,7 +127,11 @@ Component({
    */
   ready: function () {
     Utils.log("pusher ready");
-    this.data.pusherContext || (this.data.pusherContext = wx.createLivePusherContext("rtcpusher"));
+    this.data.pusherContext || (this.data.pusherContext = wx.createLivePusherContext(this));
+    // if we already have url when component mounted, start directly
+    if (this.data.url) {
+      this.start();
+    }
   },
   moved: function () {
     Utils.log("pusher moved");

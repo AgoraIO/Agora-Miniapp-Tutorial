@@ -56,13 +56,26 @@ Component({
    * 组件的初始数据
    */
   data: {
-
+    playContext: null
   },
 
   /**
    * 组件的方法列表
    */
   methods: {
+    start: function () {
+      const uid = this.data.uid;
+      Utils.log(`starting player ${uid}`);
+      this.data.playContext.stop();
+      this.data.playContext.play();
+    },
+
+    stop: function () {
+      const uid = this.data.uid;
+      Utils.log(`stopping player ${uid}`);
+      this.data.playContext.stop();
+    },
+
     rotate: function (rotation) {
       let orientation = rotation === 90 || rotation === 270 ? "horizontal" : "vertical";
       Utils.log(`rotation: ${rotation}, orientation: ${orientation}, uid: ${this.data.uid}`);
@@ -92,7 +105,11 @@ Component({
    */
   ready: function () {
     Utils.log(`player ${this.data.uid} ready`);
-    this.data.playContext || (this.data.playContext = wx.createLivePlayerContext(`player-${this.data.uid}`));
+    this.data.playContext || (this.data.playContext = wx.createLivePlayerContext(`player-${this.data.uid}`, this));
+    // if we already have url when component mounted, start directly
+    if(this.data.url) {
+      this.start();
+    }
   },
   moved: function () {
     Utils.log(`player ${this.data.uid} moved`);

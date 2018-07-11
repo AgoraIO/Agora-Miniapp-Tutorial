@@ -19,13 +19,12 @@ Page({
     pushUrl: "",
     playUrls: [],
     muted: false,
-    makeup: false,
+    beauty: 0,
     pushX: 0,
     pushY: 0,
     pushWidth: 0,
     pushHeight: 0,
     totalUser: 1,
-    pushing: true,
     debug: false
   },
 
@@ -79,6 +78,10 @@ Page({
         Utils.log(`pushing ${pushUrl}`);
         this.refreshPlayers({
           pushUrl: pushUrl
+        }).then(() => {
+          this.startPusher();
+        }).catch(e => {
+          Utils.log(`starting pusher failed`);
         });
       }).catch(e => {
         Utils.log(`init agora client failed: ${e}`);
@@ -155,27 +158,6 @@ Page({
   },
 
   /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh: function () {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom: function () {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage: function () {
-
-  },
-
-  /**
    * 推流状态更新回调
    */
   onPusherFailed: function (e) {
@@ -192,19 +174,6 @@ Page({
     }, (err) => {
       Utils.log(`url update failed ${err}`);
     });
-  },
-
-  /**
-   * 根据uid更新流属性
-   */
-  updatePlayer(uid, options) {
-    for (let i = 0; i < this.data.playUrls.length; i++) {
-      let urlObj = this.data.playUrls[i];
-      if (`${urlObj.uid}` === `${uid}`) {
-        urlObj = Object.assign(urlObj, options);
-        this.data.playUrls[i] = urlObj;
-      }
-    }
   },
 
   /**
@@ -254,8 +223,9 @@ Page({
    * 美颜回调
    */
   onMakeup: function () {
+    let beauty = this.data.beauty == 5 ? 0 : 5;
     this.setData({
-      makeup: !this.data.makeup
+      beauty: beauty
     })
   },
 
@@ -428,6 +398,28 @@ Page({
     const agoraPlayer = this.selectComponent(`#rtc-player-${uid}`);
     return agoraPlayer;
   },
+
+  startPlayers: function () {
+    this.data.playUrls.forEach(urlObj => {
+      this.startPlayer(urlObj.uid);
+    });
+  },
+
+  stopPlayers: function() {
+    this.data.playUrls.forEach(urlObj => {
+      this.stopPlayer(urlObj.uid);
+    });
+  },
+
+  startPlayer: function(uid) {
+    const player = this.getPlayerComponent(uid);
+    player && player.start();
+  },
+
+  stopPlayer: function (uid) {
+    const player = this.getPlayerComponent(uid);
+    player && player.stop();
+  },
   /**
    * 注册stream事件
    */
@@ -439,6 +431,7 @@ Page({
     });
     client.on("stream-added", e => {
       let uid = e.uid;
+      const ts = new Date().getTime();
       Utils.log(`stream ${uid} added`);
       client.subscribe(uid, (url, rotation) => {
         Utils.log(`stream ${uid} subscribed successful`);
@@ -449,13 +442,15 @@ Page({
             //if existing, update
             playUrl = item;
             playUrl.src = url;
+            playUrl.key = ts;
+            this.startPlayer(uid);
             break;
           }
         }
 
         if(!playUrl) {
           //if not existing, push new to array
-          this.data.playUrls.push({ key: uid, uid: uid, src: url, rotation: rotation});
+          this.data.playUrls.push({ key: ts, uid: uid, src: url, rotation: rotation});
         }
         this.refreshPlayers();
       }, e => {
@@ -490,6 +485,7 @@ Page({
       let uid = e.uid;
       Utils.log(`start-reconnect, ${uid}`);
       this.stopPusher();
+      this.stopPlayers();
     })
     client.on('reconnect-end', (e) => {
       let uid = e.uid;
