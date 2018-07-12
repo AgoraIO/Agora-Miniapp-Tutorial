@@ -4,7 +4,11 @@ const Utils = require("./utils/util.js");
 App({
   onLaunch: function () {
     // 展示本地存储能力
-    Utils.checkSystemInfo();
+    Utils.checkSystemInfo(this);
+
+    wx.authorize({
+      scope: 'scope.record',
+    });
 
     // 登录
     wx.login({

@@ -1,5 +1,6 @@
 // components/agora-pusher.js
 const Utils = require("../../utils/util.js")
+const Perf = require("../../utils/perf.js")
 
 Component({
   /**
@@ -56,10 +57,6 @@ Component({
       observer: function (newVal, oldVal, changedPath) {
         // 属性被改变时执行的函数（可选），也可以写成在methods段中定义的方法名字符串, 如：'_propertyChange'
         // 通常 newVal 就是新设置的数据， oldVal 是旧数据
-        if(!this.data.pusherContext) {
-          Utils.log(`url updated but context not yet ready`, "error");
-          return;
-        }
         Utils.log(`pusher url changed from ${oldVal} to ${newVal}, path: ${changedPath}`);
       }
     }
@@ -78,6 +75,7 @@ Component({
   methods: {
     start() {
       Utils.log(`starting pusher`);
+      this.data.pusherContext.stop();
       this.data.pusherContext.start();
     },
 
@@ -102,22 +100,19 @@ Component({
       if (e.detail.code === -1307) {
         //re-push
         Utils.log('live-pusher stopped', "error");
-        //complete stop pusher first when failed
-        this.data.pusherContext.stop({
-          complete: () => {
-            //empty url after
-            this.setData({
-              url: ""
-            }, () => {
-              //emit event
-              this.triggerEvent('pushfailed');
-            });
-          }
-        });
+        //emit event
+        this.triggerEvent('pushfailed');
       }
+
+      if (e.detail.code === 1003) {
+        Perf.profile(`Camera started`);
+      }
+
       if (e.detail.code === 1008) {
         //started
         Utils.log(`live-pusher started`);
+        Perf.profile(`decoder started`);
+        Perf.dump();
       }
     }
   },
@@ -128,8 +123,8 @@ Component({
   ready: function () {
     Utils.log("pusher ready");
     this.data.pusherContext || (this.data.pusherContext = wx.createLivePusherContext(this));
-    // if we already have url when component mounted, start directly
-    if (this.data.url) {
+    Perf.profile(`Pusher ready`);
+    if(this.data.url) {
       this.start();
     }
   },

@@ -2,11 +2,12 @@ const Event = require("./event");
 const Utils = require("./util");
 
 class LogUploaderTask {
-  constructor(content, channel, part, ts) {
+  constructor(content, channel, part, ts, uid) {
     this.content = content;
     this.channel = channel;
     this.part = part;
     this.ts = ts;
+    this.uid = uid;
   }
   process() {
     return new Promise((resolve, reject) => {
@@ -17,7 +18,8 @@ class LogUploaderTask {
           logs: this.content,
           channel: this.channel,
           part: this.part,
-          ts: this.ts
+          ts: this.ts,
+          uid: this.uid
         },
         success: function (res) {
           resolve();

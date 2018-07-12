@@ -1,11 +1,11 @@
 <!--index.wxml-->
 <view id="main" class="content agora-bg flex-center-column">
   <view id="video-container" class="video-container n{{totalUser}}">
-    <agora-pusher id="rtc-pusher" x="{{pushX}}" y="{{pushY}}" width="{{pushWidth}}" height="{{pushHeight}}" url="{{pushUrl}}" muted="{{muted}}" beauty="{{beauty}}" debug="{{debug}}" bindpushfailed="onPusherFailed">
-    </agora-pusher>
-     <block wx:for="{{playUrls}}" wx:key="key">
-      <agora-player id="rtc-player-{{item.uid}}" uid="{{item.uid}}" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}"  debug="{{debug}}" url="{{item.src}}">
-      </agora-player>
+     <block wx:for="{{media}}" wx:key="key">
+        <agora-pusher wx:if="{{item.type === 0 && !item.holding}}" id="rtc-pusher" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}" url="{{item.url}}" muted="{{muted}}" beauty="{{beauty}}" debug="{{debug}}" bindpushfailed="onPusherFailed">
+        </agora-pusher>
+        <agora-player wx:if="{{item.type === 1}}" id="rtc-player-{{item.uid}}" uid="{{item.uid}}" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}"  debug="{{debug}}" url="{{item.url}}">
+        </agora-player>
     </block> 
   </view>
   <view class="footer flex-center-column">

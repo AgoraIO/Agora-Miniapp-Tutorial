@@ -3,12 +3,13 @@ const app = getApp()
 // const AgoraSDK = require('../../js/mini-app-sdk-production.js');
 const Utils = require('../../utils/util.js')
 const AgoraMiniappSDK = require("../../lib/mini-app-sdk-production.js");
-const max_user = 6;
+const max_user = 7;
 const Layouter = require("../../utils/layout.js");
 const APPID = require("../../utils/config.js").APPID;
 const Uploader = require("../../utils/uploader.js")
 const LogUploader = Uploader.LogUploader;
 const LogUploaderTask = Uploader.LogUploaderTask;
+const Perf = require("../../utils/perf.js")
 
 Page({
 
@@ -16,14 +17,9 @@ Page({
    * 页面的初始数据
    */
   data: {
-    pushUrl: "",
-    playUrls: [],
+    media: [],
     muted: false,
     beauty: 0,
-    pushX: 0,
-    pushY: 0,
-    pushWidth: 0,
-    pushHeight: 0,
     totalUser: 1,
     debug: false
   },
@@ -32,10 +28,27 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: function (options) {
+    Utils.log(`onLoad`);
     let manager = this;
     this.name = options.name;
     this.leaving = false;
     this.channel = options.channel;
+    this.uid = Utils.getUid();
+    this.ts = new Date().getTime();
+    this.client = null;
+    this.layouter = null;
+
+    // setup profiler
+    Perf.init();
+    Perf.profile(`page onload`);
+    // page setup
+    wx.setNavigationBarTitle({
+      title: `${this.channel}(${this.uid})`
+    });
+    wx.setKeepScreenOn({
+      keepScreenOn: true
+    });
+
 
     if (/^sdktest.*$/.test(this.channel)) {
       this.testEnv = true
@@ -45,18 +58,6 @@ Page({
         showCancel: false
       })
     }
-    this.uid = Utils.getUid();
-    this.ts = new Date().getTime();
-    this.containerSize = { width: 0, height: 0 };
-    this.client = null;
-    this.layouter = null;
-    wx.setNavigationBarTitle({
-      title: `${this.channel}(${this.uid})`
-    });
-    Utils.log(`onLoad`);
-    wx.setKeepScreenOn({
-      keepScreenOn: true
-    });
   },
 
   /**
@@ -69,34 +70,120 @@ Page({
     this.timer = setInterval(() => {
       this.uploadLogs();
     }, 60 * 60 * 1000);
+    Perf.profile(`page ready`);
 
-    Promise.all([this.requestPermissions(), this.requestContainerSize()]).then(values => {
-      this.initAgoraChannel(uid, channel).then(url => {
-        let pushUrl = Utils.mashupUrl(url, channel);
-
-        Utils.log(`channel: ${channel}, uid: ${uid}`);
-        Utils.log(`pushing ${pushUrl}`);
-        this.refreshPlayers({
-          pushUrl: pushUrl
-        }).then(() => {
-          this.startPusher();
-        }).catch(e => {
-          Utils.log(`starting pusher failed`);
-        });
-      }).catch(e => {
-        Utils.log(`init agora client failed: ${e}`);
-        wx.showToast({
-          title: `客户端初始化失败`,
-          icon: 'none',
-          duration: 5000
-        });
-      });
+    this.initLayouter();
+    this.initAgoraChannel(uid, channel).then(url => {
+      Utils.log(`channel: ${channel}, uid: ${uid}`);
+      Utils.log(`pushing ${url}`);
+      let ts = new Date().getTime();
+      this.addMedia(0, this.uid, url, { key: ts });
     }).catch(e => {
-      Utils.log(`request permission/size failed: ${e}`);
+      Utils.log(`init agora client failed: ${e}`);
       wx.showToast({
-        title: `程序初始化失败`,
+        title: `客户端初始化失败`,
         icon: 'none',
         duration: 5000
+      });
+    });
+  },
+
+  syncLayout(media) {
+    let sizes = this.layouter.getSize(media.length);
+    for (let i = 0; i < sizes.length; i++) {
+      let size = sizes[i];
+      let item = media[i];
+      item.left = parseFloat(size.x).toFixed(2);
+      item.top = parseFloat(size.y).toFixed(2);
+      item.width = parseFloat(size.width).toFixed(2);
+      item.height = parseFloat(size.height).toFixed(2);
+    }
+    return media;
+  },
+
+  hasMedia(mediaType, uid) {
+    let media = this.data.media || [];
+    return media.filter(item => {return item.type === mediaType && `${item.uid}` === `${uid}`}).length > 0
+  },
+
+  addMedia(mediaType, uid, url, options) {
+    Utils.log(`add media ${mediaType} ${uid} ${url}`);
+    let media = this.data.media || [];
+    media = media.slice(0, max_user);
+
+    if(mediaType === 0) {
+      //pusher
+      media.splice(0, 0, {
+        key: options.key,
+        type: mediaType,
+        uid: `${uid}`,
+        holding: false,
+        url: url,
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0
+      });
+    } else {
+      //player
+      media.push({
+        key: options.key,
+        rotation: options.rotation,
+        type: mediaType,
+        uid: `${uid}`,
+        url: url,
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0
+      });
+    }
+
+    media = this.syncLayout(media);
+    return this.refreshMedia(media);
+  },
+
+  removeMedia: function (uid) {
+    Utils.log(`remove media ${uid}`);
+    let media = this.data.media || [];
+    media = media.filter(item => { return `${item.uid}` !== `${uid}` });
+
+    if (media.length !== this.data.media.length) {
+      media = this.syncLayout(media);
+      this.refreshMedia(media);
+    } else {
+      return Promise.resolve();
+    }
+  },
+
+  updateMedia: function (uid, options) {
+    Utils.log(`update media ${uid} ${JSON.stringify(options)}`);
+    let media = this.data.media || [];
+    let changed = false;
+    for(let i = 0; i < media.length; i++) {
+      let item = media[i];
+      if(`${item.uid}` === `${uid}`) {
+        media[i] = Object.assign(item, options);
+        changed = true;
+        Utils.log(`after update media ${uid} ${JSON.stringify(item)}`)
+        break;
+      }
+    }
+
+    if(changed){
+      return this.refreshMedia(media);
+    } else {
+      return Promise.resolve();
+    }
+  },
+
+  refreshMedia: function(media) {
+    return new Promise((resolve) => {
+      Utils.log(`updating media: ${JSON.stringify(media)}`);
+      this.setData({
+        media: media
+      }, () => {
+        resolve();
       });
     });
   },
@@ -111,6 +198,10 @@ Page({
    * 生命周期函数--监听页面隐藏
    */
   onHide: function () {
+  },
+
+  onError: function(e) {
+    Utils.log(`error: ${JSON.stringify(e)}`);
   },
 
   /**
@@ -160,45 +251,8 @@ Page({
   /**
    * 推流状态更新回调
    */
-  onPusherFailed: function (e) {
+  onPusherFailed: function () {
     Utils.log('live-pusher requesting new', "error");
-    this.client.updatePushUrl((res) => {
-      Utils.log(`url update success ${res.url}`);
-      this.refreshPlayers({
-        pushUrl: res.url
-      }).then(() => {
-        this.startPusher();
-      }).catch(e => {
-        Utils.log(`failed to recover from push failure ${e}`);
-      });
-    }, (err) => {
-      Utils.log(`url update failed ${err}`);
-    });
-  },
-
-  /**
-   * 根据playUrls的内容更新播放器
-   */
-  refreshPlayers: function (options) {
-    return new Promise((resolve) => {
-      let urls = this.data.playUrls;
-      urls = urls.slice(0, max_user);
-
-      urls = this.layouter.adaptPlayerSize(urls);
-      let size = this.layouter.adaptPusherSize(1 + urls.length);
-      Utils.log(`playing: ${JSON.stringify(urls)}`);
-      let data = Object.assign({
-        playUrls: urls,
-        totalUser: urls.length + 1,
-        pushX: size.x,
-        pushY: size.y,
-        pushWidth: size.width,
-        pushHeight: size.height
-      }, options);
-      this.setData(data, () => {
-        resolve();
-      });
-    });
   },
 
   /**
@@ -244,7 +298,7 @@ Page({
     const sliceSize = 1000;
     do {
       let content = logs.splice(0, sliceSize);
-      tasks.push(new LogUploaderTask(content, this.channel, part++, ts));
+      tasks.push(new LogUploaderTask(content, this.channel, part++, ts, this.uid));
     } while(logs.length > sliceSize)
     wx.showLoading({
       title: '0%',
@@ -300,44 +354,9 @@ Page({
   /**
    * 获取屏幕尺寸以用于之后的视窗计算
    */
-  requestContainerSize: function () {
-    let page = this;
-    return new Promise((resolve, reject) => {
-      wx.createSelectorQuery().select('#main').boundingClientRect(function (rect) {
-        page.containerSize = {
-          width: rect.width,
-          height: rect.height
-        };
-        page.layouter = new Layouter(rect.width, rect.height - 64);
-        Utils.log(`container size: ${JSON.stringify(page.containerSize)}`);
-        resolve();
-      }).exec()
-    });
-  },
-
-  /** 
-   * request Wechat permission
-   */
-  requestPermissions: function () {
-    return new Promise((resolve, reject) => {
-      wx.getSetting({
-        success(res) {
-          if (!res.authSetting['scope.record']) {
-            wx.authorize({
-              scope: 'scope.record',
-              success() {
-                resolve();
-              },
-              fail(e) {
-                reject(`获取摄像头失败`)
-              }
-            })
-          } else {
-            resolve();
-          }
-        }
-      })
-    });
+  initLayouter: function () {
+    const systemInfo = app.globalData.systemInfo;
+    this.layouter = new Layouter(systemInfo.windowWidth, systemInfo.windowHeight - 64);
   },
 
   /**
@@ -345,6 +364,7 @@ Page({
    */
   initAgoraChannel: function (uid, channel) {
     return new Promise((resolve, reject) => {
+      Perf.profile("client init");
       let client = {}
       if (this.testEnv) {
         client = new AgoraMiniappSDK.Client({
@@ -362,11 +382,14 @@ Page({
       this.client = client;
       client.init(APPID, () => {
         Utils.log(`client init success`);
+        Perf.profile("client init success, start join");
         client.join(undefined, channel, uid, () => {
           Utils.log(`client join channel success`);
+          Perf.profile("join success, start publish");
 
           //and get my stream publish url
           client.publish(url => {
+            Perf.profile("publish success");
             Utils.log(`client publish success`);
             resolve(url);
           }, e => {
@@ -384,41 +407,36 @@ Page({
     });
   },
 
-  stopPusher: function() {
-    const agoraPusher = this.selectComponent("#rtc-pusher");
-    agoraPusher && agoraPusher.stop();
-  },
-
-  startPusher: function() {
-    const agoraPusher = this.selectComponent("#rtc-pusher");
-    agoraPusher && agoraPusher.start();
-  },
-
   getPlayerComponent: function(uid) {
     const agoraPlayer = this.selectComponent(`#rtc-player-${uid}`);
     return agoraPlayer;
   },
 
-  startPlayers: function () {
-    this.data.playUrls.forEach(urlObj => {
-      this.startPlayer(urlObj.uid);
+  getPusherComponent: function() {
+    const agorapusher = this.selectComponent(`#rtc-pusher`);
+    return agorapusher;
+  },
+
+  reconnect: function () {
+    wx.showToast({
+      title: `尝试恢复链接...`,
+      icon: 'none',
+      duration: 5000
     });
-  },
-
-  stopPlayers: function() {
-    this.data.playUrls.forEach(urlObj => {
-      this.stopPlayer(urlObj.uid);
-    });
-  },
-
-  startPlayer: function(uid) {
-    const player = this.getPlayerComponent(uid);
-    player && player.start();
-  },
-
-  stopPlayer: function (uid) {
-    const player = this.getPlayerComponent(uid);
-    player && player.stop();
+    this.client && this.client.destroy();
+    setTimeout(() => {
+      let uid = this.uid;
+      let channel = this.channel;
+      this.initAgoraChannel(uid, channel).then(url => {
+        Utils.log(`channel: ${channel}, uid: ${uid}`);
+        Utils.log(`pushing ${url}`);
+        let ts = new Date().getTime();
+        this.updateMedia(this.uid, { url: url, key: ts, holding: false });
+      }).catch(e => {
+        Utils.log(`reconnect failed: ${e}`);
+        return this.reconnect();
+      });
+    }, 1 * 1000);
   },
   /**
    * 注册stream事件
@@ -426,33 +444,36 @@ Page({
   subscribeEvents: function (client) {
     client.on("video-rotation", (e) => {
       Utils.log(`video rotated: ${e.rotation} ${e.uid}`)
-      const player = this.getPlayerComponent(e.uid);
-      player && player.rotate(e.rotation);
+      setTimeout(() => {
+        const player = this.getPlayerComponent(e.uid);
+        player && player.rotate(e.rotation);
+      }, 1000);
     });
     client.on("stream-added", e => {
       let uid = e.uid;
       const ts = new Date().getTime();
       Utils.log(`stream ${uid} added`);
+      Perf.profile(`stream ${uid} added`);
       client.subscribe(uid, (url, rotation) => {
         Utils.log(`stream ${uid} subscribed successful`);
-        let playUrl = null;
-        for( let i = 0; i < this.data.playUrls.length; i++) {
-          let item = this.data.playUrls[i];
+        Perf.profile(`stream ${uid} subscribed`);
+        let media = this.data.media || [];
+        let matchItem = null;
+        for( let i = 0; i < media.length; i++) {
+          let item = this.data.media[i];
           if(`${item.uid}` === `${uid}`) {
             //if existing, update
-            playUrl = item;
-            playUrl.src = url;
-            playUrl.key = ts;
-            this.startPlayer(uid);
+            matchItem = item;
             break;
           }
         }
 
-        if(!playUrl) {
+        if (!matchItem) {
           //if not existing, push new to array
-          this.data.playUrls.push({ key: ts, uid: uid, src: url, rotation: rotation});
+          this.addMedia(1, uid, url, {key: ts, rotation: rotation})
+        } else {
+          this.updateMedia(matchItem.uid, {key: ts, url: url});
         }
-        this.refreshPlayers();
       }, e => {
         Utils.log(`stream subscribed failed ${e} ${e.code} ${e.reason}`);
       });
@@ -461,10 +482,7 @@ Page({
     client.on("stream-removed", e => {
       let uid = e.uid;
       Utils.log(`stream ${uid} removed`);
-      this.data.playUrls = this.data.playUrls.filter(urlObj => {
-        return `${urlObj.uid}` !== `${uid}`;
-      });
-      this.refreshPlayers();
+      this.removeMedia(uid);
     });
 
     client.on("error", err => {
@@ -472,40 +490,22 @@ Page({
       let code = errObj.code || 0;
       let reason = errObj.reason || "";
       Utils.log(`error: ${code}, reason: ${reason}`);
-      if (`${code}` === `${901}`) {
-        wx.showToast({
-          title: `链接断开`,
-          icon: 'none',
-          duration: 2000
-        });
-      }
+      let ts = new Date().getTime();
+      this.updateMedia(this.uid, {key: ts, holding: true});
+      this.reconnect();
     });
 
-    client.on('reconnect-start', (e) => {
+    client.on('update-url', e => {
+      Utils.log(`update-url: ${JSON.stringify(e)}`);
       let uid = e.uid;
-      Utils.log(`start-reconnect, ${uid}`);
-      this.stopPusher();
-      this.stopPlayers();
-    })
-    client.on('reconnect-end', (e) => {
-      let uid = e.uid;
-      Utils.log(`end-reconnect, ${uid}`);
-    })
-    client.on('rejoin', (e) => {
-      let uid = e.uid;
-      Utils.log(`rejoin, ${uid}`);
-      client.publish(url => {
-        Utils.log(`client publish success: ${url}`);
-        this.refreshPlayers({
-          pushUrl: url
-        }).then(() => {
-          this.startPusher();
-        }).catch(e => {
-          Utils.log(`rejoin url refresh failed`);
-        });
-      }, e => {
-        Utils.log(`client publish failed: ${e.code} ${e.reason}`);
-      });
-    })
+      let url = e.url;
+      let ts = new Date().getTime();
+      if(`${uid}` === `${this.uid}`) {
+        // if it's not pusher url, update
+        Utils.log(`ignore update-url`);
+      } else {
+        this.updateMedia(uid, { url: url, key: ts });
+      }
+    });
   }
 })
