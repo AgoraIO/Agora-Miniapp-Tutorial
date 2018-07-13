@@ -1,15 +1,17 @@
 // pages/meeting/meeting.js
 const app = getApp()
-// const AgoraSDK = require('../../js/mini-app-sdk-production.js');
 const Utils = require('../../utils/util.js')
 const AgoraMiniappSDK = require("../../lib/mini-app-sdk-production.js");
 const max_user = 7;
 const Layouter = require("../../utils/layout.js");
 const APPID = require("../../utils/config.js").APPID;
+
+/**
+ * log relevant, remove these part and relevant code if not needed
+ */
 const Uploader = require("../../utils/uploader.js")
 const LogUploader = Uploader.LogUploader;
 const LogUploaderTask = Uploader.LogUploaderTask;
-const Perf = require("../../utils/perf.js")
 
 Page({
 
@@ -17,10 +19,36 @@ Page({
    * 页面的初始数据
    */
   data: {
+    /**
+     * media objects array
+     * this involves both player & pusher data
+     * we use type to distinguish
+     * a sample media object
+     * {
+     *   key: **important, change this key only when you want to completely refresh your dom**,
+     *   type: 0 - pusher, 1 - player,
+     *   uid: uid of stream,
+     *   holding: when set to true, the block will stay while native control hidden, used when needs a placeholder for media block,
+     *   url: url of pusher/player
+     *   left: x of pusher/player
+     *   top: y of pusher/player
+     *   width: width of pusher/player
+     *   height: height of pusher/player
+     * }
+     */
     media: [],
+    /**
+     * muted
+     */
     muted: false,
+    /**
+     * beauty 0 - 10
+     */
     beauty: 0,
     totalUser: 1,
+    /**
+     * debug
+     */
     debug: false
   },
 
@@ -29,18 +57,18 @@ Page({
    */
   onLoad: function (options) {
     Utils.log(`onLoad`);
-    let manager = this;
+    // get channel & nickname from page query param
     this.name = options.name;
-    this.leaving = false;
     this.channel = options.channel;
+    // get pre-gened uid, this uid will be different every time the app is started
     this.uid = Utils.getUid();
-    this.ts = new Date().getTime();
+    // store agora client
     this.client = null;
+    // store layouter control
     this.layouter = null;
+    // prevent user from clicking leave too fast
+    this.leaving = false;
 
-    // setup profiler
-    Perf.init();
-    Perf.profile(`page onload`);
     // page setup
     wx.setNavigationBarTitle({
       title: `${this.channel}(${this.uid})`
@@ -49,7 +77,9 @@ Page({
       keepScreenOn: true
     });
 
-
+    /**
+     * please remove this part in your production environment
+     */
     if (/^sdktest.*$/.test(this.channel)) {
       this.testEnv = true
       wx.showModal({
@@ -67,16 +97,22 @@ Page({
     let channel = this.channel;
     let uid = this.uid;
     Utils.log(`onReady`);
+
+    // schedule log auto update, remove this if this is not needed
     this.timer = setInterval(() => {
       this.uploadLogs();
     }, 60 * 60 * 1000);
-    Perf.profile(`page ready`);
 
+    // init layouter control
     this.initLayouter();
+
+    // init agora channel
     this.initAgoraChannel(uid, channel).then(url => {
       Utils.log(`channel: ${channel}, uid: ${uid}`);
       Utils.log(`pushing ${url}`);
       let ts = new Date().getTime();
+
+      // first time init, add pusher media to view
       this.addMedia(0, this.uid, url, { key: ts });
     }).catch(e => {
       Utils.log(`init agora client failed: ${e}`);
@@ -88,6 +124,10 @@ Page({
     });
   },
 
+  /**
+   * calculate size based on current media length
+   * sync the layout info into each media object
+   */
   syncLayout(media) {
     let sizes = this.layouter.getSize(media.length);
     for (let i = 0; i < sizes.length; i++) {
@@ -101,11 +141,25 @@ Page({
     return media;
   },
 
+  /**
+   * check if current media list has specified uid & mediaType component
+   */
   hasMedia(mediaType, uid) {
     let media = this.data.media || [];
     return media.filter(item => {return item.type === mediaType && `${item.uid}` === `${uid}`}).length > 0
   },
 
+  /**
+   * add media to view
+   * type: 0 - pusher, 1 - player
+   * *important* here we use ts as key, when the key changes
+   * the media component will be COMPLETELY refreshed
+   * this is useful when your live-player or live-pusher
+   * are in a bad status - say -1307. In this case, update the key
+   * property of media object to fully refresh it. The old media
+   * component life cycle event detached will be called, and
+   * new media component life cycle event ready will then be called
+   */
   addMedia(mediaType, uid, url, options) {
     Utils.log(`add media ${mediaType} ${uid} ${url}`);
     let media = this.data.media || [];
@@ -143,6 +197,9 @@ Page({
     return this.refreshMedia(media);
   },
 
+  /**
+   * remove media from view
+   */
   removeMedia: function (uid) {
     Utils.log(`remove media ${uid}`);
     let media = this.data.media || [];
@@ -156,6 +213,11 @@ Page({
     }
   },
 
+  /**
+   * update media object
+   * the media component will be fully refreshed if you try to update key
+   * property.
+   */
   updateMedia: function (uid, options) {
     Utils.log(`update media ${uid} ${JSON.stringify(options)}`);
     let media = this.data.media || [];
@@ -177,6 +239,10 @@ Page({
     }
   },
 
+  /**
+   * call setData to update a list of media to this.data.media
+   * this will trigger UI re-rendering
+   */
   refreshMedia: function(media) {
     return new Promise((resolve) => {
       Utils.log(`updating media: ${JSON.stringify(media)}`);
@@ -212,6 +278,7 @@ Page({
     clearInterval(this.timer);
     this.timer = null;
 
+    // unlock index page join button
     let pages = getCurrentPages();
     if (pages.length > 1) {
       //unlock join
@@ -219,6 +286,7 @@ Page({
       indexPage.unlockJoin();
     }
 
+    // unpublish sdk and leave channel
     try {
       this.client && this.client.unpublish();
     } catch (e) {
@@ -227,6 +295,9 @@ Page({
     this.client && this.client.leave();
   },
 
+  /**
+   * callback when leave button called
+   */
   onLeave: function () {
     if(!this.leaving){
       this.leaving = true;
@@ -234,6 +305,13 @@ Page({
     }
   },
 
+
+  /**
+   * navigate to previous page
+   * if started from shared link, it's possible that
+   * we have no page to go back, in this case just redirect
+   * to index page
+   */
   navigateBack: function(){
     Utils.log(`attemps to navigate back`);
     if (getCurrentPages().length > 1) {
@@ -269,7 +347,8 @@ Page({
    */
   onSwitchCamera: function () {
     Utils.log(`switching camera`);
-    const agoraPusher = this.selectComponent("#rtc-pusher");
+    // get pusher component via id
+    const agoraPusher = this.getPusherComponent();
     agoraPusher && agoraPusher.switchCamera();
   },
 
@@ -355,7 +434,9 @@ Page({
    * 获取屏幕尺寸以用于之后的视窗计算
    */
   initLayouter: function () {
+    // get window size info from systemInfo
     const systemInfo = app.globalData.systemInfo;
+    // 64 is the height of bottom toolbar
     this.layouter = new Layouter(systemInfo.windowWidth, systemInfo.windowHeight - 64);
   },
 
@@ -364,7 +445,6 @@ Page({
    */
   initAgoraChannel: function (uid, channel) {
     return new Promise((resolve, reject) => {
-      Perf.profile("client init");
       let client = {}
       if (this.testEnv) {
         client = new AgoraMiniappSDK.Client({
@@ -376,20 +456,18 @@ Page({
       //subscribe stream events
       this.subscribeEvents(client);
       AgoraMiniappSDK.LOG.onLog = (text) => {
+        // callback to expose sdk logs
         Utils.log(text);
       };
       AgoraMiniappSDK.LOG.setLogLevel(0);
       this.client = client;
       client.init(APPID, () => {
         Utils.log(`client init success`);
-        Perf.profile("client init success, start join");
+        // pass key instead of undefined if certificate is enabled
         client.join(undefined, channel, uid, () => {
           Utils.log(`client join channel success`);
-          Perf.profile("join success, start publish");
-
           //and get my stream publish url
           client.publish(url => {
-            Perf.profile("publish success");
             Utils.log(`client publish success`);
             resolve(url);
           }, e => {
@@ -407,22 +485,34 @@ Page({
     });
   },
 
+  /**
+   * return player component via uid
+   */
   getPlayerComponent: function(uid) {
     const agoraPlayer = this.selectComponent(`#rtc-player-${uid}`);
     return agoraPlayer;
   },
 
+  /**
+   * return pusher component
+   */
   getPusherComponent: function() {
     const agorapusher = this.selectComponent(`#rtc-pusher`);
     return agorapusher;
   },
 
+  /**
+   * reconnect when bad things happens...
+   */
   reconnect: function () {
     wx.showToast({
       title: `尝试恢复链接...`,
       icon: 'none',
       duration: 5000
     });
+    // always destroy client first
+    // *important* miniapp supports 2 websockets maximum at same time
+    // do remember to destroy old client first before creating new ones
     this.client && this.client.destroy();
     setTimeout(() => {
       let uid = this.uid;
@@ -431,6 +521,11 @@ Page({
         Utils.log(`channel: ${channel}, uid: ${uid}`);
         Utils.log(`pushing ${url}`);
         let ts = new Date().getTime();
+        // here we assume the pusher dom is still there
+        // so we use updateMedia to update info
+        // note when reconnecting we want the pusher to fully refreshed
+        // that's why we changed key property
+        // holding is used to load the pusher to turn place holder into actual pusher component
         this.updateMedia(this.uid, { url: url, key: ts, holding: false });
       }).catch(e => {
         Utils.log(`reconnect failed: ${e}`);
@@ -442,6 +537,14 @@ Page({
    * 注册stream事件
    */
   subscribeEvents: function (client) {
+    /**
+     * sometimes the video could be rotated
+     * this event will be fired with ratotion
+     * angle so that we can rotate the video
+     * NOTE video only supportes vertical or horizontal
+     * in case of 270 degrees, the video could be
+     * up side down
+     */
     client.on("video-rotation", (e) => {
       Utils.log(`video rotated: ${e.rotation} ${e.uid}`)
       setTimeout(() => {
@@ -449,29 +552,35 @@ Page({
         player && player.rotate(e.rotation);
       }, 1000);
     });
+    /**
+     * fired when new stream join the channel
+     */
     client.on("stream-added", e => {
       let uid = e.uid;
       const ts = new Date().getTime();
       Utils.log(`stream ${uid} added`);
-      Perf.profile(`stream ${uid} added`);
+      /**
+       * subscribe to get corresponding url
+       */
       client.subscribe(uid, (url, rotation) => {
         Utils.log(`stream ${uid} subscribed successful`);
-        Perf.profile(`stream ${uid} subscribed`);
         let media = this.data.media || [];
         let matchItem = null;
         for( let i = 0; i < media.length; i++) {
           let item = this.data.media[i];
           if(`${item.uid}` === `${uid}`) {
-            //if existing, update
+            //if existing, record this as matchItem and break
             matchItem = item;
             break;
           }
         }
 
         if (!matchItem) {
-          //if not existing, push new to array
+          //if not existing, add new media
           this.addMedia(1, uid, url, {key: ts, rotation: rotation})
         } else {
+          // if existing, update property
+          // change key property to refresh live-player
           this.updateMedia(matchItem.uid, {key: ts, url: url});
         }
       }, e => {
@@ -479,12 +588,21 @@ Page({
       });
     });
 
+    /**
+     * remove stream when it leaves the channel
+     */
     client.on("stream-removed", e => {
       let uid = e.uid;
       Utils.log(`stream ${uid} removed`);
       this.removeMedia(uid);
     });
 
+    /**
+     * when bad thing happens - we recommend you to do a 
+     * full reconnect when meeting such error
+     * it's also recommended to wait for few seconds before
+     * reconnect attempt
+     */
     client.on("error", err => {
       let errObj = err || {};
       let code = errObj.code || 0;
@@ -495,6 +613,14 @@ Page({
       this.reconnect();
     });
 
+    /**
+     * there are cases when server require you to update
+     * player url, when receiving such event, update url into
+     * corresponding live-player, REMEMBER to update key property
+     * so that live-player is properly refreshed
+     * NOTE you can ignore such event if it's for pusher or happens before
+     * stream-added
+     */
     client.on('update-url', e => {
       Utils.log(`update-url: ${JSON.stringify(e)}`);
       let uid = e.uid;

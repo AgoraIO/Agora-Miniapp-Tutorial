@@ -63,6 +63,11 @@ Component({
    * 组件的方法列表
    */
   methods: {
+    /**
+     * start live player via context
+     * in most cases you should not call this manually in your page
+     * as this will be automatically called in component ready method
+     */
     start: function () {
       const uid = this.data.uid;
       Utils.log(`starting player ${uid}`);
@@ -70,12 +75,18 @@ Component({
       this.data.playContext.play();
     },
 
+    /**
+     * stop live pusher context
+     */
     stop: function () {
       const uid = this.data.uid;
       Utils.log(`stopping player ${uid}`);
       this.data.playContext.stop();
     },
 
+    /**
+     * rotate video by rotation
+     */
     rotate: function (rotation) {
       let orientation = rotation === 90 || rotation === 270 ? "horizontal" : "vertical";
       Utils.log(`rotation: ${rotation}, orientation: ${orientation}, uid: ${this.data.uid}`);

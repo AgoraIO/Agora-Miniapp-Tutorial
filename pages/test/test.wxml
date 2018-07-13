@@ -1,7 +1,7 @@
 <!--pages/test/test.wxml-->
 <view style="display: flex">
   <view style="width: 50%; height: 250px; padding: 20rpx 10rpx 20rpx 20rpx">
-    <live-pusher style="height:250px; width: 100%" url="{{pushUrl}}" mode="RTC" debug="{{debug}}" max-bitrate="500" min-bitrate="200"/>
+    <live-pusher audio-quality="high" style="height:250px; width: 100%" url="{{pushUrl}}" mode="RTC" debug="{{debug}}" max-bitrate="500" min-bitrate="200"/>
   </view>
   <view style="width: 50%; height: 250px; padding: 20rpx 20rpx 20rpx 10rpx">
     <live-player id="player" src="{{playUrl}}" mode="RTC" min-cache="0.1" max-cache="0.3" bindstatechange="playerStateChange" object-fit="fillCrop" style="height:250px; width: 100%;" debug="{{debug}}" />

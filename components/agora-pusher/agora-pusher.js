@@ -1,6 +1,5 @@
 // components/agora-pusher.js
 const Utils = require("../../utils/util.js")
-const Perf = require("../../utils/perf.js")
 
 Component({
   /**
@@ -73,22 +72,29 @@ Component({
    * 组件的方法列表
    */
   methods: {
+    /**
+     * start live pusher via context
+     * in most cases you should not call this manually in your page
+     * as this will be automatically called in component ready method
+     */
     start() {
       Utils.log(`starting pusher`);
       this.data.pusherContext.stop();
       this.data.pusherContext.start();
     },
 
+    /**
+     * stop live pusher context
+     */
     stop() {
       Utils.log(`stopping pusher`);
       this.data.pusherContext.stop();
     },
 
+    /**
+     * switch camera direction
+     */
     switchCamera() {
-      if (!this.data.pusherContext) {
-        Utils.log(`pusher context not exist`, "error");
-        return;
-      }
       this.data.pusherContext.switchCamera();
     },
 
@@ -104,15 +110,9 @@ Component({
         this.triggerEvent('pushfailed');
       }
 
-      if (e.detail.code === 1003) {
-        Perf.profile(`Camera started`);
-      }
-
       if (e.detail.code === 1008) {
         //started
         Utils.log(`live-pusher started`);
-        Perf.profile(`decoder started`);
-        Perf.dump();
       }
     }
   },
@@ -123,7 +123,7 @@ Component({
   ready: function () {
     Utils.log("pusher ready");
     this.data.pusherContext || (this.data.pusherContext = wx.createLivePusherContext(this));
-    Perf.profile(`Pusher ready`);
+    // if url provided when attached, start directly
     if(this.data.url) {
       this.start();
     }

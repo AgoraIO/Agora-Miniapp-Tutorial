@@ -8,8 +8,10 @@ Page({
    * 页面的初始数据
    */
   data: {
+    // used to store user info like portrait & nickname
     userInfo: {},
     hasUserInfo: false,
+    // whether to disable join btn or not
     disableJoin: false
   },
 
@@ -50,19 +52,17 @@ Page({
   },
 
   /**
-   * 用户点击右上角分享
+   * callback to get user info
+   * using wechat open-type
    */
-  onShareAppMessage: function () {
-
-  },
-
   onGotUserInfo: function(e){
     let userInfo = e.detail.userInfo || {};
+    // store data for next launch use
     wx.setStorage({
       key: 'userInfo',
       data: userInfo,
     })
-    this.onJoin();
+    this.onJoin(userInfo);
   },
   /**
    * check if join is locked now, this is mainly to prevent from clicking join btn to start multiple new pages
@@ -79,9 +79,9 @@ Page({
     this.lock = false;
   },
 
-  onJoin: function () {
+  onJoin: function (userInfo) {
+    userInfo = userInfo || {};
     let value = this.channel || "";
-    let userInfo = app.globalData.userInfo || {};
     let nickName = userInfo.nickName || "";
 
     let uid = this.uid;
