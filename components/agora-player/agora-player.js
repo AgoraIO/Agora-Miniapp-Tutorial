@@ -25,9 +25,15 @@ Component({
       type: Boolean,
       value: !1
     },
-    loading: {
-      type: Boolean,
-      value: 1
+    /**
+     * 0 - loading, 1 - ok, 2 - error
+     */
+    status: {
+      type: String,
+      value: "loading",
+      observer: function (newVal, oldVal, changedPath) {
+        Utils.log(`player status changed from ${oldVal} to ${newVal}`);
+      }
     },
     orientation: {
       type: String,
@@ -56,7 +62,8 @@ Component({
    * 组件的初始数据
    */
   data: {
-    playContext: null
+    playContext: null,
+    detached: false
   },
 
   /**
@@ -72,6 +79,10 @@ Component({
       const uid = this.data.uid;
       Utils.log(`starting player ${uid}`);
       this.data.playContext.stop();
+      if (this.data.detached) {
+        Utils.log(`try to start pusher while component already detached`);
+        return;
+      }
       this.data.playContext.play();
     },
 
@@ -103,11 +114,16 @@ Component({
       let uid = parseInt(e.target.id.split("-")[1]);
       if (e.detail.code === 2004) {
         Utils.log(`live-player ${uid} started playing`);
-        this.setData({
-          loading: false
-        });
+        if(this.data.status === "loading") {
+          this.setData({
+            status: "ok"
+          });
+        }
       } else if (e.detail.code === -2301) {
         Utils.log(`live-player ${uid} stopped`, "error");
+        this.setData({
+          state: "error"
+        })
       }
     },
   },
@@ -129,5 +145,6 @@ Component({
     Utils.log(`player ${this.data.uid} detached`);
     // auto stop player when detached
     this.data.playContext && this.data.playContext.stop();
+    this.data.detached = true;
   }
 })

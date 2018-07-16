@@ -39,6 +39,13 @@ Page({
   },
 
   /**
+   * 只有提供了该回调才会出现转发选项
+   */
+  onShareAppMessage() {
+
+  },
+
+  /**
    * 生命周期函数--监听页面隐藏
    */
   onHide: function () {
@@ -82,7 +89,6 @@ Page({
   onJoin: function (userInfo) {
     userInfo = userInfo || {};
     let value = this.channel || "";
-    let nickName = userInfo.nickName || "";
 
     let uid = this.uid;
     if (!value) {
@@ -99,9 +105,14 @@ Page({
           wx.navigateTo({
             url: `../test/test`
           });
+        } else if (value === "agora2") {
+          // go to test page if channel name is agora
+          wx.navigateTo({
+            url: `../test2/test2`
+          });
         } else {
           wx.navigateTo({
-            url: `../meeting/meeting?channel=${value}&uid=${uid}&name=${nickName}`
+            url: `../meeting/meeting?channel=${value}&uid=${uid}`
           });
         }
       }

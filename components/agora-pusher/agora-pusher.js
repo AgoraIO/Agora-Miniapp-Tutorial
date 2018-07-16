@@ -46,9 +46,15 @@ Component({
       type: String,
       value: "3:4"
     },
-    loading: {
-      type: Boolean,
-      value: 1
+    /**
+     * 0 - loading, 1 - ok, 2 - error
+     */
+    status: {
+      type: String,
+      value: "loading",
+      observer: function (newVal, oldVal, changedPath) {
+        Utils.log(`player status changed from ${oldVal} to ${newVal}`);
+      }
     },
     url: {
       type: String,
@@ -65,7 +71,8 @@ Component({
    * 组件的初始数据
    */
   data: {
-    pusherContext: null
+    pusherContext: null,
+    detached: false
   },
 
   /**
@@ -80,6 +87,10 @@ Component({
     start() {
       Utils.log(`starting pusher`);
       this.data.pusherContext.stop();
+      if (this.data.detached) {
+        Utils.log(`try to start pusher while component already detached`);
+        return;
+      }
       this.data.pusherContext.start();
     },
 
@@ -106,6 +117,9 @@ Component({
       if (e.detail.code === -1307) {
         //re-push
         Utils.log('live-pusher stopped', "error");
+        this.setData({
+          state: "error"
+        })
         //emit event
         this.triggerEvent('pushfailed');
       }
@@ -113,6 +127,11 @@ Component({
       if (e.detail.code === 1008) {
         //started
         Utils.log(`live-pusher started`);
+        if(this.data.status === "loading") {
+          this.setData({
+            state: "ok"
+          })
+        }
       }
     }
   },
@@ -135,5 +154,6 @@ Component({
     Utils.log("pusher detached");
     // auto stop pusher when detached
     this.data.pusherContext && this.data.pusherContext.stop();
+    this.data.detached = true;
   }
 })

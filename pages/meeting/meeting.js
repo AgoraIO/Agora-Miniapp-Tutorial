@@ -57,8 +57,7 @@ Page({
    */
   onLoad: function (options) {
     Utils.log(`onLoad`);
-    // get channel & nickname from page query param
-    this.name = options.name;
+    // get channel from page query param
     this.channel = options.channel;
     // get pre-gened uid, this uid will be different every time the app is started
     this.uid = Utils.getUid();
@@ -122,6 +121,13 @@ Page({
         duration: 5000
       });
     });
+  },
+
+  /**
+   * 只有提供了该回调才会出现转发选项
+   */
+  onShareAppMessage() {
+
   },
 
   /**
@@ -276,7 +282,9 @@ Page({
   onUnload: function () {
     Utils.log(`onUnload`);
     clearInterval(this.timer);
+    clearInterval(this.reconnectTimer);
     this.timer = null;
+    this.reconnectTimer = null;
 
     // unlock index page join button
     let pages = getCurrentPages();
@@ -330,7 +338,15 @@ Page({
    * 推流状态更新回调
    */
   onPusherFailed: function () {
-    Utils.log('live-pusher requesting new', "error");
+    Utils.log('pusher failed completely', "error");
+    wx.showModal({
+      title: '发生错误',
+      content: '推流发生错误，请重新进入房间重试',
+      showCancel: false,
+      success: function () {
+        this.navigateBack();
+      }
+    })
   },
 
   /**
@@ -514,19 +530,14 @@ Page({
     // *important* miniapp supports 2 websockets maximum at same time
     // do remember to destroy old client first before creating new ones
     this.client && this.client.destroy();
-    setTimeout(() => {
+    this.reconnectTimer = setTimeout(() => {
       let uid = this.uid;
       let channel = this.channel;
       this.initAgoraChannel(uid, channel).then(url => {
         Utils.log(`channel: ${channel}, uid: ${uid}`);
         Utils.log(`pushing ${url}`);
         let ts = new Date().getTime();
-        // here we assume the pusher dom is still there
-        // so we use updateMedia to update info
-        // note when reconnecting we want the pusher to fully refreshed
-        // that's why we changed key property
-        // holding is used to load the pusher to turn place holder into actual pusher component
-        this.updateMedia(this.uid, { url: url, key: ts, holding: false });
+        this.addMedia(0, this.uid, url, { key: ts });
       }).catch(e => {
         Utils.log(`reconnect failed: ${e}`);
         return this.reconnect();
@@ -609,8 +620,9 @@ Page({
       let reason = errObj.reason || "";
       Utils.log(`error: ${code}, reason: ${reason}`);
       let ts = new Date().getTime();
-      this.updateMedia(this.uid, {key: ts, holding: true});
-      this.reconnect();
+      this.refreshMedia([]).then(() => {
+        this.reconnect();
+      });
     });
 
     /**

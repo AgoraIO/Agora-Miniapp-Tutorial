@@ -90,11 +90,6 @@ class Layouter {
           width: videoContainerWidth / 3,
           height: videoContainerHeight * 2 / 5
         }, {
-          x: 0,
-          y: videoContainerHeight * 3 / 5,
-          width: videoContainerWidth / 3,
-          height: videoContainerHeight * 2 / 5
-        }, {
           x: videoContainerWidth / 3,
           y: videoContainerHeight * 3 / 5,
           width: videoContainerWidth / 3,

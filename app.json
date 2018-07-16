@@ -2,7 +2,8 @@
   "pages": [
     "pages/index/index",
     "pages/meeting/meeting",
-    "pages/test/test"
+    "pages/test/test",
+    "pages/test2/test2"
   ],
   "window": {
     "backgroundTextStyle": "light",
