@@ -98,7 +98,7 @@ Page({
     Utils.log(`onReady`);
 
     // schedule log auto update, remove this if this is not needed
-    this.timer = setInterval(() => {
+    this.logTimer = setInterval(() => {
       this.uploadLogs();
     }, 60 * 60 * 1000);
 
@@ -281,9 +281,9 @@ Page({
    */
   onUnload: function () {
     Utils.log(`onUnload`);
-    clearInterval(this.timer);
-    clearInterval(this.reconnectTimer);
-    this.timer = null;
+    clearInterval(this.logTimer);
+    clearTimeout(this.reconnectTimer);
+    this.logTimer = null;
     this.reconnectTimer = null;
 
     // unlock index page join button
