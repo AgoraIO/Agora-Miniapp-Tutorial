@@ -122,7 +122,7 @@ Component({
       } else if (e.detail.code === -2301) {
         Utils.log(`live-player ${uid} stopped`, "error");
         this.setData({
-          state: "error"
+          status: "error"
         })
       }
     },

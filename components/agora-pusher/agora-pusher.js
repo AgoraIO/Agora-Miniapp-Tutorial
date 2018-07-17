@@ -118,7 +118,7 @@ Component({
         //re-push
         Utils.log('live-pusher stopped', "error");
         this.setData({
-          state: "error"
+          status: "error"
         })
         //emit event
         this.triggerEvent('pushfailed');
@@ -129,7 +129,7 @@ Component({
         Utils.log(`live-pusher started`);
         if(this.data.status === "loading") {
           this.setData({
-            state: "ok"
+            status: "ok"
           })
         }
       }
