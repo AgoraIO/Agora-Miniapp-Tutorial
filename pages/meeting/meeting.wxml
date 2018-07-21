@@ -4,7 +4,7 @@
      <block wx:for="{{media}}" wx:key="key">
         <agora-pusher wx:if="{{item.type === 0 && !item.holding}}" id="rtc-pusher" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}" url="{{item.url}}" muted="{{muted}}" beauty="{{beauty}}" debug="{{debug}}" bindpushfailed="onPusherFailed">
         </agora-pusher>
-        <agora-player wx:if="{{item.type === 1}}" id="rtc-player-{{item.uid}}" uid="{{item.uid}}" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}"  debug="{{debug}}" url="{{item.url}}">
+        <agora-player wx:if="{{item.type === 1 && !item.holding}}" id="rtc-player-{{item.uid}}" uid="{{item.uid}}" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}"  debug="{{debug}}" url="{{item.url}}">
         </agora-player>
     </block> 
   </view>

@@ -139,6 +139,12 @@ Page({
     for (let i = 0; i < sizes.length; i++) {
       let size = sizes[i];
       let item = media[i];
+
+      if(item.holding){
+        //skip holding item
+        continue;
+      }
+
       item.left = parseFloat(size.x).toFixed(2);
       item.top = parseFloat(size.y).toFixed(2);
       item.width = parseFloat(size.width).toFixed(2);
@@ -169,7 +175,6 @@ Page({
   addMedia(mediaType, uid, url, options) {
     Utils.log(`add media ${mediaType} ${uid} ${url}`);
     let media = this.data.media || [];
-    media = media.slice(0, max_user);
 
     if(mediaType === 0) {
       //pusher
@@ -191,6 +196,7 @@ Page({
         rotation: options.rotation,
         type: mediaType,
         uid: `${uid}`,
+        holding: false,
         url: url,
         left: 0,
         top: 0,
@@ -251,6 +257,22 @@ Page({
    */
   refreshMedia: function(media) {
     return new Promise((resolve) => {
+      for(let i = 0; i < media.length; i++) {
+        if (i < max_user) {
+          //show
+          media[i].holding = false;
+        } else {
+          //hide 
+          media[i].holding = true;
+        }
+      }
+
+      if(media.length > max_user) {
+        wx.showToast({
+          title: '由于房内人数超过7人，部分视频未被加载显示',
+        });
+      }
+
       Utils.log(`updating media: ${JSON.stringify(media)}`);
       this.setData({
         media: media
@@ -390,7 +412,7 @@ Page({
     let part = 0;
     let ts = new Date().getTime();
     // 1w logs per task slice
-    const sliceSize = 1000;
+    const sliceSize = 500;
     do {
       let content = logs.splice(0, sliceSize);
       tasks.push(new LogUploaderTask(content, this.channel, part++, ts, this.uid));
