@@ -221,6 +221,7 @@ Page({
       media = this.syncLayout(media);
       this.refreshMedia(media);
     } else {
+      Utils.log(`media not changed: ${JSON.stringify(media)}`)
       return Promise.resolve();
     }
   },
@@ -247,6 +248,7 @@ Page({
     if(changed){
       return this.refreshMedia(media);
     } else {
+      Utils.log(`media not changed: ${JSON.stringify(media)}`)
       return Promise.resolve();
     }
   },
@@ -365,7 +367,7 @@ Page({
       title: '发生错误',
       content: '推流发生错误，请重新进入房间重试',
       showCancel: false,
-      success: function () {
+      success: () => {
         this.navigateBack();
       }
     })
@@ -497,7 +499,7 @@ Page({
         // callback to expose sdk logs
         Utils.log(text);
       };
-      AgoraMiniappSDK.LOG.setLogLevel(0);
+      AgoraMiniappSDK.LOG.setLogLevel(-1);
       this.client = client;
       client.init(APPID, () => {
         Utils.log(`client init success`);
