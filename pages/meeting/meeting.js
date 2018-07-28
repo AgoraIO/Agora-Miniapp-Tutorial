@@ -288,6 +288,21 @@ Page({
    * 生命周期函数--监听页面显示
    */
   onShow: function () {
+    let media = this.data.media || [];
+    media.forEach(item => {
+      if(item.type === 0) {
+        //return for pusher
+        return;
+      }
+      let player = this.getPlayerComponent(item.uid);
+      if(!player) {
+        Utils.log(`player ${item.uid} component no longer exists`, "error");
+      } else {
+        // while in background, the player maybe added but not starting
+        // in this case we need to start it once come back
+        player.start();
+      }
+    });
   },
 
   /**
@@ -488,7 +503,7 @@ Page({
       let client = {}
       if (this.testEnv) {
         client = new AgoraMiniappSDK.Client({
-          servers: ["wss://miniapp.agoraio.cn/115-239-228-77/"]
+          servers: ["wss://miniapp.agoraio.cn/120-92-168-80/"]
         });
       } else {
         client = new AgoraMiniappSDK.Client()
@@ -505,6 +520,52 @@ Page({
         Utils.log(`client init success`);
         // pass key instead of undefined if certificate is enabled
         client.join(undefined, channel, uid, () => {
+          Utils.log(`client join channel success`);
+          //and get my stream publish url
+          client.publish(url => {
+            Utils.log(`client publish success`);
+            resolve(url);
+          }, e => {
+            Utils.log(`client publish failed: ${e.code} ${e.reason}`);
+            reject(e)
+          });
+        }, e => {
+          Utils.log(`client join channel failed: ${e.code} ${e.reason}`);
+          reject(e)
+        })
+      }, e => {
+        Utils.log(`client init failed: ${e} ${e.code} ${e.reason}`);
+        reject(e);
+      });
+    });
+  },
+
+  reinitAgoraChannel: function (uid, channel) {
+    return new Promise((resolve, reject) => {
+      let client = {}
+      if (this.testEnv) {
+        client = new AgoraMiniappSDK.Client({
+          servers: ["wss://miniapp.agoraio.cn/120-92-168-80/"]
+        });
+      } else {
+        client = new AgoraMiniappSDK.Client()
+      }
+      //subscribe stream events
+      this.subscribeEvents(client);
+      AgoraMiniappSDK.LOG.onLog = (text) => {
+        // callback to expose sdk logs
+        Utils.log(text);
+      };
+      AgoraMiniappSDK.LOG.setLogLevel(-1);
+      let uids = this.data.media.map(item => {
+        return item.uid;
+      });
+      this.client = client;
+      client.init(APPID, () => {
+        Utils.log(`client init success`);
+        // pass key instead of undefined if certificate is enabled
+        Utils.log(`rejoin with uids: ${JSON.stringify(uids)}`);
+        client.rejoin(undefined, channel, uid, uids, () => {
           Utils.log(`client join channel success`);
           //and get my stream publish url
           client.publish(url => {
@@ -557,11 +618,18 @@ Page({
     this.reconnectTimer = setTimeout(() => {
       let uid = this.uid;
       let channel = this.channel;
-      this.initAgoraChannel(uid, channel).then(url => {
+      this.reinitAgoraChannel(uid, channel).then(url => {
         Utils.log(`channel: ${channel}, uid: ${uid}`);
         Utils.log(`pushing ${url}`);
         let ts = new Date().getTime();
-        this.addMedia(0, this.uid, url, { key: ts });
+        if(this.hasMedia(0, this.uid)) {
+          // pusher already exists in media list
+          this.updateMedia(this.uid, { url: url });
+        } else {
+          // pusher not exists in media list
+          Utils.log(`pusher not yet exists when rejoin...adding`);
+          this.addMedia(0, this.uid, url, { key: ts });
+        }
       }).catch(e => {
         Utils.log(`reconnect failed: ${e}`);
         return this.reconnect();
@@ -616,7 +684,7 @@ Page({
         } else {
           // if existing, update property
           // change key property to refresh live-player
-          this.updateMedia(matchItem.uid, {key: ts, url: url});
+          this.updateMedia(matchItem.uid, {url: url});
         }
       }, e => {
         Utils.log(`stream subscribed failed ${e} ${e.code} ${e.reason}`);
@@ -644,9 +712,9 @@ Page({
       let reason = errObj.reason || "";
       Utils.log(`error: ${code}, reason: ${reason}`);
       let ts = new Date().getTime();
-      this.refreshMedia([]).then(() => {
+      if(code === 501 || code === 904) {
         this.reconnect();
-      });
+      }
     });
 
     /**
@@ -666,7 +734,7 @@ Page({
         // if it's not pusher url, update
         Utils.log(`ignore update-url`);
       } else {
-        this.updateMedia(uid, { url: url, key: ts });
+        this.updateMedia(uid, { url: url });
       }
     });
   }

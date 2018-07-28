@@ -78,7 +78,10 @@ Component({
     start: function () {
       const uid = this.data.uid;
       Utils.log(`starting player ${uid}`);
-      this.data.playContext.stop();
+      if (this.data.status === "ok") {
+        Utils.log(`player ${uid} already started`);
+        return;
+      }
       if (this.data.detached) {
         Utils.log(`try to start pusher while component already detached`);
         return;

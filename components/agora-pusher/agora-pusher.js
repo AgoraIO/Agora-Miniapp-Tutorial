@@ -113,7 +113,7 @@ Component({
      * 推流状态更新回调
      */
     recorderStateChange: function (e) {
-      Utils.log(`live-pusher code: ${e.detail.code}`)
+      Utils.log(`live-pusher code: ${e.detail.code} - ${e.detail.message}`)
       if (e.detail.code === -1307) {
         //re-push
         Utils.log('live-pusher stopped', "error");
@@ -133,6 +133,9 @@ Component({
           })
         }
       }
+    },
+    recorderNetChange: function(e) {
+      Utils.log(`network: ${JSON.stringify(e.detail)}`);
     }
   },
 
@@ -142,10 +145,6 @@ Component({
   ready: function () {
     Utils.log("pusher ready");
     this.data.pusherContext || (this.data.pusherContext = wx.createLivePusherContext(this));
-    // if url provided when attached, start directly
-    if(this.data.url) {
-      this.start();
-    }
   },
   moved: function () {
     Utils.log("pusher moved");
