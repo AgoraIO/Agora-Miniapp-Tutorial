@@ -21,6 +21,7 @@
 3. 请确保在微信公众平台账号的开发设置中，给予以下域名请求权限：
 
  * https://miniapp.agoraio.cn
+ * https://uni-webcollector.agora.io
  * wss://miniapp.agoraio.cn
 
 ## 运行示例程序
