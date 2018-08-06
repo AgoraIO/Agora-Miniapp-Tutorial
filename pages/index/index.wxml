@@ -16,7 +16,7 @@
       <button plain="true" open-type="getUserInfo" bindgetuserinfo="onGotUserInfo" disabled="{{disableJoin}}" class="joinBtn">加入房间</button>
     </view>
     <view class="footer flex-center-column">
-      <text>Powered by Agora</text>
+      <text>Powered by Agora. Build v1.1.1180907</text>
     </view>
   </view>
 </view>

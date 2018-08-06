@@ -2,6 +2,18 @@ let logitems = [];
 let dbgRtmp = false;
 let systemInfoChecked = false;
 let uid = `${parseInt(Math.random() * 1000000)}`;
+let timer;
+
+const debounce = function(fn, delay) {
+  return function () {
+    let context = this
+    let args = arguments
+    clearTimeout(timer)
+    timer = setTimeout(function () {
+      fn.apply(context, args)
+    }, delay)
+  }
+}
 
 const formatTime = date => {
   const year = date.getFullYear()
@@ -56,7 +68,7 @@ const mashupUrl = (url, channel) => {
   return url;
 }
 
-const checkSystemInfo = () => {
+const checkSystemInfo = (app) => {
   if (!systemInfoChecked) {
     systemInfoChecked = true;
     wx.getSystemInfo({
@@ -66,6 +78,9 @@ const checkSystemInfo = () => {
         let version_items = sdkVersion.split(".");
         let major_version = parseInt(version_items[0]);
         let minor_version = parseInt(version_items[1]);
+
+        app.globalData.systemInfo = res;
+
         if (major_version <= 1 && minor_version < 7) {
           wx.showModal({
             title: '版本过低',
@@ -90,6 +105,8 @@ const checkSystemInfo = () => {
     formatTime: formatTime,
     requestPermission: requestPermission,
     log: log,
+    clearLogs: function () {logitems = []},
     getLogs: function () { return logitems },
-    mashupUrl: mashupUrl
+    mashupUrl: mashupUrl,
+    debounce: debounce
   }

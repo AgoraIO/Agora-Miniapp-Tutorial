@@ -6,7 +6,8 @@ Page({
    */
   data: {
     playUrl: "",
-    pushUrl: ""
+    pushUrl: "",
+    debug: true
   },
 
   /**
@@ -46,7 +47,12 @@ Page({
    * 生命周期函数--监听页面卸载
    */
   onUnload: function () {
-  
+    let pages = getCurrentPages();
+    if (pages.length > 1) {
+      //unlock join
+      let indexPage = pages[0];
+      indexPage.unlockJoin();
+    }
   },
 
   /**
@@ -70,6 +76,12 @@ Page({
   
   },
 
+  switchDebug() {
+    this.setData({
+      debug: !this.data.debug
+    })
+  },
+
   startPushing: function(e) {
     let url = e.detail.value;
     this.setData({
@@ -80,6 +92,11 @@ Page({
     });
   },
 
+  onStopPushing: function(e) {
+    let context = wx.createLivePusherContext(this);
+    context.stop();
+  },
+
   startPlaying: function(e) {
     let url = e.detail.value;
     this.setData({
@@ -88,5 +105,15 @@ Page({
       let context = wx.createLivePlayerContext("player", this);
       context.play();
     });
+  },
+
+  onPause: function() {
+    let context = wx.createLivePusherContext(this);
+    context && context.pause();
+  },
+
+  onResume: function() {
+    let context = wx.createLivePusherContext(this);
+    context && context.resume();
   }
 })

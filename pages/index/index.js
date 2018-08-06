@@ -8,8 +8,10 @@ Page({
    * 页面的初始数据
    */
   data: {
+    // used to store user info like portrait & nickname
     userInfo: {},
     hasUserInfo: false,
+    // whether to disable join btn or not
     disableJoin: false
   },
 
@@ -19,6 +21,7 @@ Page({
   onLoad: function (options) {
     this.channel = "";
     this.uid = Utils.getUid();
+    this.lock = false;
     let userInfo = wx.getStorageSync("userInfo");
     if (userInfo){
       this.setData({
@@ -36,9 +39,10 @@ Page({
   },
 
   /**
-   * 生命周期函数--监听页面显示
+   * 只有提供了该回调才会出现转发选项
    */
-  onShow: function () {
+  onShareAppMessage() {
+
   },
 
   /**
@@ -55,26 +59,36 @@ Page({
   },
 
   /**
-   * 用户点击右上角分享
+   * callback to get user info
+   * using wechat open-type
    */
-  onShareAppMessage: function () {
-
-  },
-
   onGotUserInfo: function(e){
     let userInfo = e.detail.userInfo || {};
+    // store data for next launch use
     wx.setStorage({
       key: 'userInfo',
       data: userInfo,
     })
-    this.onJoin();
+    this.onJoin(userInfo);
+  },
+  /**
+   * check if join is locked now, this is mainly to prevent from clicking join btn to start multiple new pages
+   */
+  checkJoinLock: function() {
+    return !(this.lock || false);
+  },
+  
+  lockJoin: function() {
+    this.lock = true;
   },
 
-  
-  onJoin: function () {
+  unlockJoin: function() {
+    this.lock = false;
+  },
+
+  onJoin: function (userInfo) {
+    userInfo = userInfo || {};
     let value = this.channel || "";
-    let userInfo = app.globalData.userInfo || {};
-    let nickName = userInfo.nickName || "";
 
     let uid = this.uid;
     if (!value) {
@@ -84,15 +98,23 @@ Page({
         duration: 2000
       })
     } else {
-      if(value === "agora") {
-        // go to test page if channel name is agora
-        wx.navigateTo({
-          url: `../test/test`
-        });
-      } else {
-        wx.navigateTo({
-          url: `../meeting/meeting?channel=${value}&uid=${uid}&name=${nickName}`
-        });
+      if(this.checkJoinLock()) {
+        this.lockJoin();
+        if (value === "agora") {
+          // go to test page if channel name is agora
+          wx.navigateTo({
+            url: `../test/test`
+          });
+        } else if (value === "agora2") {
+          // go to test page if channel name is agora
+          wx.navigateTo({
+            url: `../test2/test2`
+          });
+        } else {
+          wx.navigateTo({
+            url: `../meeting/meeting?channel=${value}&uid=${uid}`
+          });
+        }
       }
     }
   },

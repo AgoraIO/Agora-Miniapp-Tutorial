@@ -1,34 +1,19 @@
 <!--index.wxml-->
 <view id="main" class="content agora-bg flex-center-column">
   <view id="video-container" class="video-container n{{totalUser}}">
-    <view class="pusher-container" style="width: {{pushWidth}}px; height: {{pushHeight}}px; position: absolute;">
-       <live-pusher wx-if="{{pushUrl!==''}}" style="height:{{pushHeight}}px; position: absolute; width: 100%" url="{{pushUrl}}" mode="RTC" class="camera" bindnetstatus="recorderInfo" bindstatechange="recorderStateChange" muted="{{muted}}" beauty="{{makeup?'5':'0'}}" max-bitrate="500" waiting-image="https://webdemo.agora.io/away.png"
-        autopush="true" /> 
-      <cover-view wx-if="{{pushing}}" class="sud flex-center-column" style="position: absolute; width: 100%; height: 100%;justify-content:center">
-        <cover-image style="width: 128px;height:103px" src="../../images/loading.png"></cover-image>
-      </cover-view>
-    </view>
-    <block wx:for="{{playUrls}}" wx:key="key">
-      <view class="play-container" style="left:{{item.left}}px; top:{{item.top}}px; width: {{item.width}}px; height: {{item.height}}px; ">
-        <live-player id="player-{{item.uid}}" src="{{item.src}}" mode="RTC" class="player" min-cache="0.1" max-cache="0.3" bindstatechange="playerStateChange" object-fit="fillCrop" style="height:{{item.height}}px; position: absolute; width: 100%; top: 0; z-index: 99;" autoplay="true" />
-        <cover-view wx-if="{{item.loading}}" class="sud flex-center-column" style="position: absolute; width: 100%; height:{{item.height}}px;justify-content:center">
-          <cover-image style="width: 128px;height:103px" src="../../images/loading.png"></cover-image>
-        </cover-view>
-        <cover-view wx-if="{{item.holding}}" class="sud flex-center-column" style="position: absolute; width: 100%; height:{{height}}px;justify-content:center; top: 0;">
-          <cover-image style="width: 128px;height:103px" src="../../images/network.png"></cover-image>
-        </cover-view>
-        <cover-view class="" style="position: absolute;top:10px;left:10px;font-size: 28rpx; right: 10px">
-          {{item.name}}({{item.uid}})
-        </cover-view>
-      </view>
-    </block>
+     <block wx:for="{{media}}" wx:key="key">
+        <agora-pusher wx:if="{{item.type === 0 && !item.holding}}" id="rtc-pusher" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}" url="{{item.url}}" muted="{{muted}}" beauty="{{beauty}}" debug="{{debug}}" bindpushfailed="onPusherFailed">
+        </agora-pusher>
+        <agora-player wx:if="{{item.type === 1 && !item.holding}}" id="rtc-player-{{item.uid}}" uid="{{item.uid}}" x="{{item.left}}" y="{{item.top}}" width="{{item.width}}" height="{{item.height}}" debug="{{debug}}" url="{{item.url}}">
+        </agora-player>
+    </block> 
   </view>
   <view class="footer flex-center-column">
     <view class="toolbar">
       <button plain="true" class="mic {{muted?'muted': ''}} btn" bindtap='onMute'></button>
       <button plain="true" hover-class="hover" class="camera btn" bindtap='onSwitchCamera'></button>
       <button plain="true" hover-class="hover" class="hangup btn" bindtap='onLeave'></button>
-      <button plain="true" class="makeup {{makeup?'':'off'}} btn" bindtap='onMakeup'></button>
+      <button plain="true" class="makeup {{beauty === 5 ?'':'off'}} btn" bindtap='onMakeup'></button>
       <button plain="true" hover-class="hover" class="log btn" bindtap='onSubmitLog'></button>
     </view>
   </view>

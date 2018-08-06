@@ -1,143 +1,183 @@
-class Layouter{
-  constructor(containerWidth, containerHeight){
+class Layouter {
+  constructor(containerWidth, containerHeight) {
     this.containerWidth = containerWidth;
     this.containerHeight = containerHeight;
   }
 
-  adaptPusherSize(userCount) {
+  getSize(totalUser) {
+    let sizes = [];
     let videoContainerHeight = this.containerHeight;
     let videoContainerWidth = this.containerWidth;
-
-    switch (userCount) {
+    switch (totalUser) {
+      case 0:
+        return [];
       case 1:
-      case 2:
-      case 3:
-      case 4:
-        return {
+        return [{
+          x: 0,
+          y: 0,
           width: videoContainerWidth,
           height: videoContainerHeight
-        };
-      case 5:
-      case 6:
-        return {
-          width: videoContainerWidth * 2 / 3,
-          height: videoContainerHeight * 3 / 5
-        };
-      case 7:
-      default:
-        return {
+        }];
+      case 2:
+        let y = (videoContainerHeight - videoContainerWidth / 2 * (4 / 3)) / 2;
+        let height = videoContainerWidth / 2 * (4 / 3);
+        return [{
+            x: 0,
+            y: y,
+            width: videoContainerWidth / 2,
+            height: height
+          },
+          {
+            x: videoContainerWidth / 2,
+            y: y,
+            width: videoContainerWidth / 2,
+            height: height
+          }
+        ];
+      case 3:
+        return [{
+          x: 0,
+          y: 0,
+          width: videoContainerWidth,
+          height: videoContainerHeight - videoContainerWidth / 2
+        }, {
+          x: 0,
+          y: videoContainerHeight - videoContainerWidth / 2,
           width: videoContainerWidth / 2,
-          height: videoContainerHeight / 3
-        };
+          height: videoContainerWidth / 2
+        }, {
+          x: videoContainerWidth / 2,
+          y: videoContainerHeight - videoContainerWidth / 2,
+          width: videoContainerWidth / 2,
+          height: videoContainerWidth / 2
+        }];
+      case 4:
+        return [{
+          x: 0,
+          y: 0,
+          width: videoContainerWidth / 2,
+          height: videoContainerHeight / 2
+        }, {
+          x: videoContainerWidth / 2,
+          y: 0,
+          width: videoContainerWidth / 2,
+          height: videoContainerHeight / 2
+        }, {
+          x: 0,
+          y: videoContainerHeight / 2,
+          width: videoContainerWidth / 2,
+          height: videoContainerHeight / 2
+        }, {
+          x: videoContainerWidth / 2,
+          y: videoContainerHeight / 2,
+          width: videoContainerWidth / 2,
+          height: videoContainerHeight / 2
+        }];
+      case 5:
+        return [{
+          x: 0,
+          y: 0,
+          width: videoContainerWidth / 2,
+          height: videoContainerHeight * 3 / 5
+        }, {
+          x: videoContainerWidth / 2,
+          y: 0,
+          width: videoContainerWidth / 2,
+          height: videoContainerHeight * 3 / 5
+        }, {
+          x: 0,
+          y: videoContainerHeight * 3 / 5,
+          width: videoContainerWidth / 3,
+          height: videoContainerHeight * 2 / 5
+        }, {
+          x: videoContainerWidth / 3,
+          y: videoContainerHeight * 3 / 5,
+          width: videoContainerWidth / 3,
+          height: videoContainerHeight * 2 / 5
+        }, {
+          x: videoContainerWidth * 2 / 3,
+          y: videoContainerHeight * 3 / 5,
+          width: videoContainerWidth / 3,
+          height: videoContainerHeight * 2 / 5
+        }];
+      case 6:
+        return [{
+            x: 0,
+            y: 0,
+            width: videoContainerWidth * 2 / 3,
+            height: videoContainerHeight * 3 / 5
+          },
+          {
+            x: videoContainerWidth * 2 / 3,
+            y: 0,
+            width: videoContainerWidth * 1 / 3,
+            height: videoContainerHeight * 3 / 5 / 2
+          },
+          {
+            x: videoContainerWidth * 2 / 3,
+            y: videoContainerHeight * 3 / 5 / 2,
+            width: videoContainerWidth * 1 / 3,
+            height: videoContainerHeight * 3 / 5 / 2
+          }, {
+            x: 0,
+            y: videoContainerHeight * 3 / 5,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight * 2 / 5
+          }, {
+            x: videoContainerWidth / 3,
+            y: videoContainerHeight * 3 / 5,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight * 2 / 5
+          }, {
+            x: videoContainerWidth * 2 / 3,
+            y: videoContainerHeight * 3 / 5,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight * 2 / 5
+          }
+        ];
+      case 7:
+        return [
+          {
+            x: 0,
+            y: 0,
+            width: videoContainerWidth / 2,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: videoContainerWidth / 2,
+            y: 0,
+            width: videoContainerWidth / 2,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 0,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 2,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: videoContainerWidth / 2,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 2,
+            height: videoContainerHeight / 3
+          }, {
+            x: 0,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }, {
+            x: videoContainerWidth / 3,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }, {
+            x: videoContainerWidth * 2 / 3,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }
+        ];
     }
-
-    return height;
-  }
-
-  adaptPlayerSize(urlObjs) {
-    let videoContainerHeight = this.containerHeight;
-    let videoContainerWidth = this.containerWidth;
-    let size = {
-      width: videoContainerWidth,
-      height: videoContainerHeight
-    };
-    let pusherSize = this.adaptPusherSize(1 + urlObjs.length);
-    if (urlObjs.length > 0 && urlObjs.length <= 3) {
-      urlObjs[0].width = size.width / 4;
-      urlObjs[0].height = size.height / 4;
-      urlObjs[0].top = size.height - urlObjs[0].height - 10;
-      urlObjs[0].left = (size.width / 3 - urlObjs[0].width) / 2;
-
-      if (urlObjs.length >= 2) {
-        urlObjs[1].width = size.width / 4;
-        urlObjs[1].height = size.height / 4;
-        urlObjs[1].top = size.height - urlObjs[1].height - 10;
-        urlObjs[1].left = size.width / 3 + urlObjs[0].left;
-      }
-
-      if (urlObjs.length === 3) {
-        urlObjs[2].width = size.width / 4;
-        urlObjs[2].height = size.height / 4;
-        urlObjs[2].top = size.height - urlObjs[1].height - 10;
-        urlObjs[2].left = size.width * 2 / 3 + urlObjs[0].left;
-      }
-    } else if (urlObjs.length === 4) {
-      urlObjs[0].width = pusherSize.width;
-      urlObjs[0].height = pusherSize.height;
-      urlObjs[0].top = 0;
-      urlObjs[0].left = pusherSize.width;
-
-      urlObjs[1].width = size.width / 3;
-      urlObjs[1].height = size.height - pusherSize.height;
-      urlObjs[1].top = pusherSize.height;
-      urlObjs[1].left = 0;
-
-      urlObjs[2].width = size.width / 3;
-      urlObjs[2].height = size.height - pusherSize.height;
-      urlObjs[2].top = pusherSize.height;
-      urlObjs[2].left = size.width / 3;
-
-      urlObjs[3].width = size.width / 3;
-      urlObjs[3].height = size.height - pusherSize.height;
-      urlObjs[3].top = pusherSize.height;
-      urlObjs[3].left = size.width * 2 / 3;
-    } else if (urlObjs.length === 5) {
-      urlObjs[0].width = pusherSize.width;
-      urlObjs[0].height = pusherSize.height / 2;
-      urlObjs[0].top = 0;
-      urlObjs[0].left = pusherSize.width;
-
-      urlObjs[1].width = pusherSize.width;
-      urlObjs[1].height = pusherSize.height / 2;
-      urlObjs[1].top = pusherSize.height / 2;
-      urlObjs[1].left = pusherSize.width;
-
-      urlObjs[2].width = size.width / 3;
-      urlObjs[2].height = size.height - pusherSize.height;
-      urlObjs[2].top = pusherSize.height;
-      urlObjs[2].left = 0;
-
-      urlObjs[3].width = size.width / 3;
-      urlObjs[3].height = size.height - pusherSize.height;
-      urlObjs[3].top = pusherSize.height;
-      urlObjs[3].left = size.width / 3;
-
-      urlObjs[4].width = size.width / 3;
-      urlObjs[4].height = size.height - pusherSize.height;
-      urlObjs[4].top = pusherSize.height;
-      urlObjs[4].left = size.width * 2 / 3;
-    } else if (urlObjs.length === 6) {
-      urlObjs[0].width = pusherSize.width;
-      urlObjs[0].height = pusherSize.height;
-      urlObjs[0].top = 0;
-      urlObjs[0].left = pusherSize.width;
-
-      urlObjs[1].width = pusherSize.width;
-      urlObjs[1].height = pusherSize.height;
-      urlObjs[1].top = pusherSize.height;
-      urlObjs[1].left = 0;
-
-      urlObjs[2].width = pusherSize.width;
-      urlObjs[2].height = pusherSize.height;
-      urlObjs[2].top = pusherSize.height;
-      urlObjs[2].left = pusherSize.width;
-
-      urlObjs[3].width = size.width / 3;
-      urlObjs[3].height = size.height - pusherSize.height * 2;
-      urlObjs[3].top = pusherSize.height * 2;
-      urlObjs[3].left = 0;
-
-      urlObjs[4].width = size.width / 3;
-      urlObjs[4].height = size.height - pusherSize.height * 2;
-      urlObjs[4].top = pusherSize.height * 2;
-      urlObjs[4].left = size.width / 3;
-
-      urlObjs[5].width = size.width / 3;
-      urlObjs[5].height = size.height - pusherSize.height * 2;
-      urlObjs[5].top = pusherSize.height * 2;
-      urlObjs[5].left = size.width * 2 / 3;
-    }
-    return urlObjs;
   }
 
 }
