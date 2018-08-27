@@ -111,9 +111,21 @@ Page({
             url: `../test2/test2`
           });
         } else {
-          wx.navigateTo({
-            url: `../meeting/meeting?channel=${value}&uid=${uid}`
-          });
+          wx.showModal({
+            title: '是否推流',
+            content: '选择取消则作为观众加入，观众模式不推流',
+            showCancel: true,
+            success: function (res) {
+              let role = "audience";
+              if (res.confirm) {
+                role = "broadcaster";
+              }
+
+              wx.navigateTo({
+                url: `../meeting/meeting?channel=${value}&uid=${uid}&role=${role}`
+              });
+            }
+          })
         }
       }
     }

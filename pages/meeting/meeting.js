@@ -59,6 +59,8 @@ Page({
     Utils.log(`onLoad`);
     // get channel from page query param
     this.channel = options.channel;
+    // default role to broadcaster
+    this.role = options.role || "broadcaster";
     // get pre-gened uid, this uid will be different every time the app is started
     this.uid = Utils.getUid();
     // store agora client
@@ -111,8 +113,15 @@ Page({
       Utils.log(`pushing ${url}`);
       let ts = new Date().getTime();
 
-      // first time init, add pusher media to view
-      this.addMedia(0, this.uid, url, { key: ts });
+      if(this.isBroadcaster()) {
+        // first time init, add pusher media to view
+        this.addMedia(0, this.uid, url, { key: ts });
+        setTimeout(() => {
+          Utils.log(`unpublishing`);
+          this.client.unpublish();
+          this.removeMedia(this.uid);
+        }, 10* 1000)
+      }
     }).catch(e => {
       Utils.log(`init agora client failed: ${e}`);
       wx.showToast({
@@ -334,10 +343,12 @@ Page({
     }
 
     // unpublish sdk and leave channel
-    try {
-      this.client && this.client.unpublish();
-    } catch (e) {
-      Utils.log(`unpublish failed ${e}`);
+    if(this.isBroadcaster()) {
+      try {
+        this.client && this.client.unpublish();
+      } catch (e) {
+        Utils.log(`unpublish failed ${e}`);
+      }
     }
     this.client && this.client.leave();
   },
@@ -516,19 +527,24 @@ Page({
       };
       AgoraMiniappSDK.LOG.setLogLevel(-1);
       this.client = client;
+      client.setRole(this.role);
       client.init(APPID, () => {
         Utils.log(`client init success`);
         // pass key instead of undefined if certificate is enabled
         client.join(undefined, channel, uid, () => {
           Utils.log(`client join channel success`);
           //and get my stream publish url
-          client.publish(url => {
-            Utils.log(`client publish success`);
-            resolve(url);
-          }, e => {
-            Utils.log(`client publish failed: ${e.code} ${e.reason}`);
-            reject(e)
-          });
+          if(this.isBroadcaster()) {
+            client.publish(url => {
+              Utils.log(`client publish success`);
+              resolve(url);
+            }, e => {
+              Utils.log(`client publish failed: ${e.code} ${e.reason}`);
+              reject(e)
+            });
+          } else {
+            resolve();
+          }
         }, e => {
           Utils.log(`client join channel failed: ${e.code} ${e.reason}`);
           reject(e)
@@ -561,20 +577,24 @@ Page({
         return item.uid;
       });
       this.client = client;
+      client.setRole(this.role);
       client.init(APPID, () => {
         Utils.log(`client init success`);
         // pass key instead of undefined if certificate is enabled
         Utils.log(`rejoin with uids: ${JSON.stringify(uids)}`);
         client.rejoin(undefined, channel, uid, uids, () => {
           Utils.log(`client join channel success`);
-          //and get my stream publish url
-          client.publish(url => {
-            Utils.log(`client publish success`);
-            resolve(url);
-          }, e => {
-            Utils.log(`client publish failed: ${e.code} ${e.reason}`);
-            reject(e)
-          });
+          if (this.isBroadcaster()) {
+            client.publish(url => {
+              Utils.log(`client publish success`);
+              resolve(url);
+            }, e => {
+              Utils.log(`client publish failed: ${e.code} ${e.reason}`);
+              reject(e)
+            });
+          } else {
+            resolve();
+          }
         }, e => {
           Utils.log(`client join channel failed: ${e.code} ${e.reason}`);
           reject(e)
@@ -622,13 +642,16 @@ Page({
         Utils.log(`channel: ${channel}, uid: ${uid}`);
         Utils.log(`pushing ${url}`);
         let ts = new Date().getTime();
-        if(this.hasMedia(0, this.uid)) {
-          // pusher already exists in media list
-          this.updateMedia(this.uid, { url: url });
-        } else {
-          // pusher not exists in media list
-          Utils.log(`pusher not yet exists when rejoin...adding`);
-          this.addMedia(0, this.uid, url, { key: ts });
+
+        if (this.isBroadcaster()) { 
+          if (this.hasMedia(0, this.uid)) {
+            // pusher already exists in media list
+            this.updateMedia(this.uid, { url: url });
+          } else {
+            // pusher not exists in media list
+            Utils.log(`pusher not yet exists when rejoin...adding`);
+            this.addMedia(0, this.uid, url, { key: ts });
+          }
         }
       }).catch(e => {
         Utils.log(`reconnect failed: ${e}`);
@@ -636,6 +659,14 @@ Page({
       });
     }, 1 * 1000);
   },
+
+  /**
+   * 如果
+   */
+  isBroadcaster: function() {
+    return this.role === "broadcaster";
+  },
+
   /**
    * 注册stream事件
    */
