@@ -116,11 +116,6 @@ Page({
       if(this.isBroadcaster()) {
         // first time init, add pusher media to view
         this.addMedia(0, this.uid, url, { key: ts });
-        setTimeout(() => {
-          Utils.log(`unpublishing`);
-          this.client.unpublish();
-          this.removeMedia(this.uid);
-        }, 10* 1000)
       }
     }).catch(e => {
       Utils.log(`init agora client failed: ${e}`);
