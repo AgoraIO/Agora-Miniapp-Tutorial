@@ -24,6 +24,12 @@
  * https://uni-webcollector.agora.io
  * wss://miniapp.agoraio.cn
 
+4. 若使用的是1.1.2 BETA后的版本，则需要额外添加以下域名
+ * https://miniapp-1.agoraio.cn
+ * https://miniapp-2.agoraio.cn
+ * https://miniapp-3.agoraio.cn
+ * https://miniapp-4.agoraio.cn
+
 ## 运行示例程序
  
 1. 在 [Agora.io](http://dashboard.agora.io/signin/) 注册账号，并创建自己的测试项目，获取 App ID。如需获取 Token 或 Channel Key，请启用 App Certificate
