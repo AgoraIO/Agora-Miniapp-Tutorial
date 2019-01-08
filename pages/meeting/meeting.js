@@ -474,18 +474,42 @@ Page({
    */
   onSubmitLog: function () {
     let page = this;
-    this.setData({
-      debug: !this.data.debug
-    })
-    wx.showModal({
-      title: '遇到使用问题?',
-      content: '点击确定可以上传日志，帮助我们了解您在使用过程中的问题',
-      success: function (res) {
-        if (res.confirm) {
-          console.log('用户点击确定')
-          page.uploadLogs();
-        } else if (res.cancel) {
-          console.log('用户点击取消')
+    let mediaAction = this.isBroadcaster() ? "下麦" : "上麦"
+    wx.showActionSheet({
+      itemList: [mediaAction, "上传日志"],
+      success: res => {
+        let tapIndex = res.tapIndex;
+        if(tapIndex == 0) {
+          if(this.isBroadcaster()) {
+            this.becomeAudience().then(() => {
+              this.removeMedia(this.uid);
+            }).catch(e => {
+              Utils.log(`switch to audience failed ${e.stack}`);
+            })
+          } else {
+            let ts = new Date().getTime();
+            this.becomeBroadcaster().then(url => {
+              this.addMedia(0, this.uid, url, { key: ts });
+            }).catch(e => {
+              Utils.log(`switch to broadcaster failed ${e.stack}`);
+            })
+          }
+        } else if (tapIndex === 1) {
+          this.setData({
+            debug: !this.data.debug
+          })
+          wx.showModal({
+            title: '遇到使用问题?',
+            content: '点击确定可以上传日志，帮助我们了解您在使用过程中的问题',
+            success: function (res) {
+              if (res.confirm) {
+                console.log('用户点击确定')
+                page.uploadLogs();
+              } else if (res.cancel) {
+                console.log('用户点击取消')
+              }
+            }
+          })
         }
       }
     })
@@ -509,7 +533,7 @@ Page({
       let client = {}
       if (this.testEnv) {
         client = new AgoraMiniappSDK.Client({
-          servers: ["wss://miniapp.agoraio.cn/120-92-168-80/"]
+          servers: ["wss://miniapp.agoraio.cn/120-131-14-112/api"]
         });
       } else {
         client = new AgoraMiniappSDK.Client()
@@ -523,10 +547,10 @@ Page({
       AgoraMiniappSDK.LOG.setLogLevel(-1);
       this.client = client;
       client.setRole(this.role);
-      client.init(APPID, () => {
+      client.init("c20bbd1a5c0d44488ad55e0b5101fde4", () => {
         Utils.log(`client init success`);
         // pass key instead of undefined if certificate is enabled
-        client.join(undefined, channel, uid, () => {
+        client.join("005AQAoADg5RTMxMDlCMjM5MzQyRTg3NkIzMEU0NDREQUMzQUFCNjdFNzlCOTYQAMILvRpcDURIitVeC1EB/eS5VzRcMwAAgAAAAAAAAA==", "10069989", "11423", () => {
           Utils.log(`client join channel success`);
           //and get my stream publish url
           if(this.isBroadcaster()) {
@@ -556,7 +580,7 @@ Page({
       let client = {}
       if (this.testEnv) {
         client = new AgoraMiniappSDK.Client({
-          servers: ["wss://miniapp.agoraio.cn/120-92-168-80/"]
+          servers: ["wss://miniapp.agoraio.cn/120-131-14-112/api"]
         });
       } else {
         client = new AgoraMiniappSDK.Client()
@@ -615,6 +639,45 @@ Page({
   getPusherComponent: function() {
     const agorapusher = this.selectComponent(`#rtc-pusher`);
     return agorapusher;
+  },
+
+  becomeBroadcaster: function() {
+    return new Promise((resolve, reject) => {
+      if(!this.client){
+        return reject(new Error("no client available"))
+      }
+      let client = this.client
+      this.role = "broadcaster"
+      client.setRole(this.role)
+      Utils.log(`client switching role to ${this.role}`);
+      client.publish(url => {
+        Utils.log(`client publish success`);
+        resolve(url);
+      }, e => {
+        Utils.log(`client publish failed: ${e.code} ${e.reason}`);
+        reject(e)
+      });
+    })
+  },
+
+  becomeAudience: function() {
+    return new Promise((resolve, reject) => {
+      if (!this.client) {
+        return reject(new Error("no client available"))
+      }
+
+      let client = this.client
+      client.unpublish(() => {
+        Utils.log(`client unpublish success`);
+        this.role = "audience"
+        Utils.log(`client switching role to ${this.role}`);
+        client.setRole(this.role)
+        resolve();
+      }, e => {
+        Utils.log(`client unpublish failed: ${e.code} ${e.reason}`);
+        reject(e)
+      });
+    })
   },
 
   /**
