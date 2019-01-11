@@ -547,10 +547,10 @@ Page({
       AgoraMiniappSDK.LOG.setLogLevel(-1);
       this.client = client;
       client.setRole(this.role);
-      client.init("c20bbd1a5c0d44488ad55e0b5101fde4", () => {
+      client.init(APPID, () => {
         Utils.log(`client init success`);
         // pass key instead of undefined if certificate is enabled
-        client.join("005AQAoADg5RTMxMDlCMjM5MzQyRTg3NkIzMEU0NDREQUMzQUFCNjdFNzlCOTYQAMILvRpcDURIitVeC1EB/eS5VzRcMwAAgAAAAAAAAA==", "10069989", "11423", () => {
+        client.join(undefined, channel, uid, () => {
           Utils.log(`client join channel success`);
           //and get my stream publish url
           if(this.isBroadcaster()) {
