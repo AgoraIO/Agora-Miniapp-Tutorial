@@ -177,6 +177,170 @@ class Layouter {
             height: videoContainerHeight / 3
           }
         ];
+      case 8:
+        return [
+          {
+            x: 0,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: videoContainerWidth / 3,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 2 * videoContainerWidth / 3,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 0,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 2,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: videoContainerWidth / 2,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 2,
+            height: videoContainerHeight / 3
+          }, {
+            x: 0,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }, {
+            x: videoContainerWidth / 3,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }, {
+            x: videoContainerWidth * 2 / 3,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }
+        ];
+      case 9:
+        return [
+          {
+            x: 0,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: videoContainerWidth / 3,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 2 * videoContainerWidth / 3,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 0,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: videoContainerWidth / 3,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 2 * videoContainerWidth / 3,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 0,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }, {
+            x: videoContainerWidth / 3,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }, {
+            x: videoContainerWidth * 2 / 3,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }
+        ];
+      case 10:
+        return [
+          {
+            x: 0,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 6
+          },
+          {
+            x: 0,
+            y: videoContainerHeight / 6,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 6
+          },
+          {
+            x: videoContainerWidth / 3,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 2 * videoContainerWidth / 3,
+            y: 0,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 0,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: videoContainerWidth / 3,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 2 * videoContainerWidth / 3,
+            y: videoContainerHeight / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          },
+          {
+            x: 0,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }, {
+            x: videoContainerWidth / 3,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }, {
+            x: videoContainerWidth * 2 / 3,
+            y: videoContainerHeight * 2 / 3,
+            width: videoContainerWidth / 3,
+            height: videoContainerHeight / 3
+          }
+        ];
     }
   }
 

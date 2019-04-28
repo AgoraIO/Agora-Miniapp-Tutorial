@@ -2,7 +2,7 @@
 const app = getApp()
 const Utils = require('../../utils/util.js')
 const AgoraMiniappSDK = require("../../lib/mini-app-sdk-production.js");
-const max_user = 7;
+const max_user = 10;
 const Layouter = require("../../utils/layout.js");
 const APPID = require("../../utils/config.js").APPID;
 
@@ -55,7 +55,7 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad: function (options) {
+  onLoad: function(options) {
     Utils.log(`onLoad`);
     // get channel from page query param
     this.channel = options.channel;
@@ -94,7 +94,7 @@ Page({
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady: function () {
+  onReady: function() {
     let channel = this.channel;
     let uid = this.uid;
     Utils.log(`onReady`);
@@ -113,9 +113,11 @@ Page({
       Utils.log(`pushing ${url}`);
       let ts = new Date().getTime();
 
-      if(this.isBroadcaster()) {
+      if (this.isBroadcaster()) {
         // first time init, add pusher media to view
-        this.addMedia(0, this.uid, url, { key: ts });
+        this.addMedia(0, this.uid, url, {
+          key: ts
+        });
       }
     }).catch(e => {
       Utils.log(`init agora client failed: ${e}`);
@@ -144,7 +146,7 @@ Page({
       let size = sizes[i];
       let item = media[i];
 
-      if(item.holding){
+      if (item.holding) {
         //skip holding item
         continue;
       }
@@ -162,7 +164,9 @@ Page({
    */
   hasMedia(mediaType, uid) {
     let media = this.data.media || [];
-    return media.filter(item => {return item.type === mediaType && `${item.uid}` === `${uid}`}).length > 0
+    return media.filter(item => {
+      return item.type === mediaType && `${item.uid}` === `${uid}`
+    }).length > 0
   },
 
   /**
@@ -180,7 +184,7 @@ Page({
     Utils.log(`add media ${mediaType} ${uid} ${url}`);
     let media = this.data.media || [];
 
-    if(mediaType === 0) {
+    if (mediaType === 0) {
       //pusher
       media.splice(0, 0, {
         key: options.key,
@@ -216,10 +220,12 @@ Page({
   /**
    * remove media from view
    */
-  removeMedia: function (uid) {
+  removeMedia: function(uid) {
     Utils.log(`remove media ${uid}`);
     let media = this.data.media || [];
-    media = media.filter(item => { return `${item.uid}` !== `${uid}` });
+    media = media.filter(item => {
+      return `${item.uid}` !== `${uid}`
+    });
 
     if (media.length !== this.data.media.length) {
       media = this.syncLayout(media);
@@ -235,13 +241,13 @@ Page({
    * the media component will be fully refreshed if you try to update key
    * property.
    */
-  updateMedia: function (uid, options) {
+  updateMedia: function(uid, options) {
     Utils.log(`update media ${uid} ${JSON.stringify(options)}`);
     let media = this.data.media || [];
     let changed = false;
-    for(let i = 0; i < media.length; i++) {
+    for (let i = 0; i < media.length; i++) {
       let item = media[i];
-      if(`${item.uid}` === `${uid}`) {
+      if (`${item.uid}` === `${uid}`) {
         media[i] = Object.assign(item, options);
         changed = true;
         Utils.log(`after update media ${uid} ${JSON.stringify(item)}`)
@@ -249,7 +255,7 @@ Page({
       }
     }
 
-    if(changed){
+    if (changed) {
       return this.refreshMedia(media);
     } else {
       Utils.log(`media not changed: ${JSON.stringify(media)}`)
@@ -263,7 +269,7 @@ Page({
    */
   refreshMedia: function(media) {
     return new Promise((resolve) => {
-      for(let i = 0; i < media.length; i++) {
+      for (let i = 0; i < media.length; i++) {
         if (i < max_user) {
           //show
           media[i].holding = false;
@@ -273,7 +279,7 @@ Page({
         }
       }
 
-      if(media.length > max_user) {
+      if (media.length > max_user) {
         wx.showToast({
           title: '由于房内人数超过7人，部分视频未被加载显示',
         });
@@ -291,15 +297,15 @@ Page({
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow: function () {
+  onShow: function() {
     let media = this.data.media || [];
     media.forEach(item => {
-      if(item.type === 0) {
+      if (item.type === 0) {
         //return for pusher
         return;
       }
       let player = this.getPlayerComponent(item.uid);
-      if(!player) {
+      if (!player) {
         Utils.log(`player ${item.uid} component no longer exists`, "error");
       } else {
         // while in background, the player maybe added but not starting
@@ -312,8 +318,7 @@ Page({
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide: function () {
-  },
+  onHide: function() {},
 
   onError: function(e) {
     Utils.log(`error: ${JSON.stringify(e)}`);
@@ -322,7 +327,7 @@ Page({
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload: function () {
+  onUnload: function() {
     Utils.log(`onUnload`);
     clearInterval(this.logTimer);
     clearTimeout(this.reconnectTimer);
@@ -338,7 +343,7 @@ Page({
     }
 
     // unpublish sdk and leave channel
-    if(this.isBroadcaster()) {
+    if (this.isBroadcaster()) {
       try {
         this.client && this.client.unpublish();
       } catch (e) {
@@ -351,8 +356,8 @@ Page({
   /**
    * callback when leave button called
    */
-  onLeave: function () {
-    if(!this.leaving){
+  onLeave: function() {
+    if (!this.leaving) {
       this.leaving = true;
       this.navigateBack();
     }
@@ -365,12 +370,11 @@ Page({
    * we have no page to go back, in this case just redirect
    * to index page
    */
-  navigateBack: function(){
+  navigateBack: function() {
     Utils.log(`attemps to navigate back`);
     if (getCurrentPages().length > 1) {
       //have pages on stack
-      wx.navigateBack({
-      });
+      wx.navigateBack({});
     } else {
       //no page on stack, usually means start from shared links
       wx.redirectTo({
@@ -382,7 +386,7 @@ Page({
   /**
    * 推流状态更新回调
    */
-  onPusherFailed: function () {
+  onPusherFailed: function() {
     Utils.log('pusher failed completely', "error");
     wx.showModal({
       title: '发生错误',
@@ -397,7 +401,20 @@ Page({
   /**
    * 静音回调
    */
-  onMute: function () {
+  onMute: function() {
+    if (!this.data.muted) {
+      this.client.muteLocal('audio', () => {
+        console.log('muteLocal success')
+      }, err => {
+        console.log(err)
+      });
+    } else {
+      this.client.unmuteLocal('audio', () => {
+        console.log('unmuteLocal success')
+      }, err => {
+        console.log(err)
+      });
+    }
     this.setData({
       muted: !this.data.muted
     })
@@ -406,7 +423,7 @@ Page({
   /**
    * 摄像头方向切换回调
    */
-  onSwitchCamera: function () {
+  onSwitchCamera: function() {
     Utils.log(`switching camera`);
     // get pusher component via id
     const agoraPusher = this.getPusherComponent();
@@ -416,7 +433,7 @@ Page({
   /**
    * 美颜回调
    */
-  onMakeup: function () {
+  onMakeup: function() {
     let beauty = this.data.beauty == 5 ? 0 : 5;
     this.setData({
       beauty: beauty
@@ -426,7 +443,7 @@ Page({
   /**
    * 上传日志
    */
-  uploadLogs: function () {
+  uploadLogs: function() {
     let logs = Utils.getLogs();
     Utils.clearLogs();
 
@@ -439,7 +456,7 @@ Page({
     do {
       let content = logs.splice(0, sliceSize);
       tasks.push(new LogUploaderTask(content, this.channel, part++, ts, this.uid));
-    } while(logs.length > sliceSize)
+    } while (logs.length > sliceSize)
     wx.showLoading({
       title: '0%',
       mask: true
@@ -448,7 +465,7 @@ Page({
       let remain = e.remain;
       let total = e.total;
       Utils.log(`log upload progress ${total - remain}/${total}`);
-      if(remain === 0) {
+      if (remain === 0) {
         wx.hideLoading();
         wx.showToast({
           title: `上传成功`,
@@ -472,15 +489,15 @@ Page({
   /**
    * 上传日志回调
    */
-  onSubmitLog: function () {
+  onSubmitLog: function() {
     let page = this;
     let mediaAction = this.isBroadcaster() ? "下麦" : "上麦"
     wx.showActionSheet({
       itemList: [mediaAction, "上传日志"],
       success: res => {
         let tapIndex = res.tapIndex;
-        if(tapIndex == 0) {
-          if(this.isBroadcaster()) {
+        if (tapIndex == 0) {
+          if (this.isBroadcaster()) {
             this.becomeAudience().then(() => {
               this.removeMedia(this.uid);
             }).catch(e => {
@@ -489,7 +506,9 @@ Page({
           } else {
             let ts = new Date().getTime();
             this.becomeBroadcaster().then(url => {
-              this.addMedia(0, this.uid, url, { key: ts });
+              this.addMedia(0, this.uid, url, {
+                key: ts
+              });
             }).catch(e => {
               Utils.log(`switch to broadcaster failed ${e.stack}`);
             })
@@ -501,7 +520,7 @@ Page({
           wx.showModal({
             title: '遇到使用问题?',
             content: '点击确定可以上传日志，帮助我们了解您在使用过程中的问题',
-            success: function (res) {
+            success: function(res) {
               if (res.confirm) {
                 console.log('用户点击确定')
                 page.uploadLogs();
@@ -518,7 +537,7 @@ Page({
   /**
    * 获取屏幕尺寸以用于之后的视窗计算
    */
-  initLayouter: function () {
+  initLayouter: function() {
     // get window size info from systemInfo
     const systemInfo = app.globalData.systemInfo;
     // 64 is the height of bottom toolbar
@@ -528,7 +547,7 @@ Page({
   /**
    * 初始化sdk推流
    */
-  initAgoraChannel: function (uid, channel) {
+  initAgoraChannel: function(uid, channel) {
     return new Promise((resolve, reject) => {
       let client = {}
       if (this.testEnv) {
@@ -553,7 +572,7 @@ Page({
         client.join(undefined, channel, uid, () => {
           Utils.log(`client join channel success`);
           //and get my stream publish url
-          if(this.isBroadcaster()) {
+          if (this.isBroadcaster()) {
             client.publish(url => {
               Utils.log(`client publish success`);
               resolve(url);
@@ -575,7 +594,7 @@ Page({
     });
   },
 
-  reinitAgoraChannel: function (uid, channel) {
+  reinitAgoraChannel: function(uid, channel) {
     return new Promise((resolve, reject) => {
       let client = {}
       if (this.testEnv) {
@@ -643,7 +662,7 @@ Page({
 
   becomeBroadcaster: function() {
     return new Promise((resolve, reject) => {
-      if(!this.client){
+      if (!this.client) {
         return reject(new Error("no client available"))
       }
       let client = this.client
@@ -683,7 +702,7 @@ Page({
   /**
    * reconnect when bad things happens...
    */
-  reconnect: function () {
+  reconnect: function() {
     wx.showToast({
       title: `尝试恢复链接...`,
       icon: 'none',
@@ -701,14 +720,18 @@ Page({
         Utils.log(`pushing ${url}`);
         let ts = new Date().getTime();
 
-        if (this.isBroadcaster()) { 
+        if (this.isBroadcaster()) {
           if (this.hasMedia(0, this.uid)) {
             // pusher already exists in media list
-            this.updateMedia(this.uid, { url: url });
+            this.updateMedia(this.uid, {
+              url: url
+            });
           } else {
             // pusher not exists in media list
             Utils.log(`pusher not yet exists when rejoin...adding`);
-            this.addMedia(0, this.uid, url, { key: ts });
+            this.addMedia(0, this.uid, url, {
+              key: ts
+            });
           }
         }
       }).catch(e => {
@@ -728,7 +751,7 @@ Page({
   /**
    * 注册stream事件
    */
-  subscribeEvents: function (client) {
+  subscribeEvents: function(client) {
     /**
      * sometimes the video could be rotated
      * this event will be fired with ratotion
@@ -758,9 +781,9 @@ Page({
         Utils.log(`stream ${uid} subscribed successful`);
         let media = this.data.media || [];
         let matchItem = null;
-        for( let i = 0; i < media.length; i++) {
+        for (let i = 0; i < media.length; i++) {
           let item = this.data.media[i];
-          if(`${item.uid}` === `${uid}`) {
+          if (`${item.uid}` === `${uid}`) {
             //if existing, record this as matchItem and break
             matchItem = item;
             break;
@@ -769,11 +792,16 @@ Page({
 
         if (!matchItem) {
           //if not existing, add new media
-          this.addMedia(1, uid, url, {key: ts, rotation: rotation})
+          this.addMedia(1, uid, url, {
+            key: ts,
+            rotation: rotation
+          })
         } else {
           // if existing, update property
           // change key property to refresh live-player
-          this.updateMedia(matchItem.uid, {url: url});
+          this.updateMedia(matchItem.uid, {
+            url: url
+          });
         }
       }, e => {
         Utils.log(`stream subscribed failed ${e} ${e.code} ${e.reason}`);
@@ -801,7 +829,7 @@ Page({
       let reason = errObj.reason || "";
       Utils.log(`error: ${code}, reason: ${reason}`);
       let ts = new Date().getTime();
-      if(code === 501 || code === 904) {
+      if (code === 501 || code === 904) {
         this.reconnect();
       }
     });
@@ -819,11 +847,13 @@ Page({
       let uid = e.uid;
       let url = e.url;
       let ts = new Date().getTime();
-      if(`${uid}` === `${this.uid}`) {
+      if (`${uid}` === `${this.uid}`) {
         // if it's not pusher url, update
         Utils.log(`ignore update-url`);
       } else {
-        this.updateMedia(uid, { url: url });
+        this.updateMedia(uid, {
+          url: url
+        });
       }
     });
   }
