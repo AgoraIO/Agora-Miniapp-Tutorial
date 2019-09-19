@@ -724,7 +724,8 @@ Page({
           if (this.hasMedia(0, this.uid)) {
             // pusher already exists in media list
             this.updateMedia(this.uid, {
-              url: url
+              url: url,
+              key: ts,
             });
           } else {
             // pusher not exists in media list
@@ -800,7 +801,8 @@ Page({
           // if existing, update property
           // change key property to refresh live-player
           this.updateMedia(matchItem.uid, {
-            url: url
+            url: url,
+            key: ts,
           });
         }
       }, e => {
@@ -852,7 +854,8 @@ Page({
         Utils.log(`ignore update-url`);
       } else {
         this.updateMedia(uid, {
-          url: url
+          url: url,
+          key: ts,
         });
       }
     });
