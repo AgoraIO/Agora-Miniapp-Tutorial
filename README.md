@@ -49,7 +49,7 @@ See [Token](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_native
 ## Contact Us
 
 * You can find the API document at [Developer Center](http://docs.agora.io/en/).
-* You can report issues about this demo at [issue](https://github.com/AgoraIO/Agora-Android-Tutorial-1to1/issues).
+* You can report issues about this demo at [issue](https://github.com/AgoraIO/Agora-Miniapp-Tutorial/issues).
 
 ## License
 
