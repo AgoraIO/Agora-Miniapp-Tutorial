@@ -38,7 +38,7 @@ With this sample app, you can:
 
 ## About the Token/Dynamic Key
 
-If you have enabled the App Cerficate, you will need to generate the Token/Dynamic Key at the server for authentication purposes. Use it in the following method:
+If you have enabled the App Certificate, you will need to generate the Token/Dynamic Key at the server for authentication purposes. Use it in the following method:
 
     	//...
     	client.join(<your key/access token here>, channel, uid, () => {
