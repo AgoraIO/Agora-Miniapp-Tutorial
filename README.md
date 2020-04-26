@@ -25,7 +25,7 @@ With this sample app, you can:
 
 ## Running the App
  
-1. Create a developer account at [Agora.io](http://dashboard.agora.io/signin/), obtain an App ID, and enable the App Certificate.
+1. Create a developer account at [Agora.io](http://dashboard.agora.io/signin/), create a new project and obtain an App ID, and enable the App Certificate.
 2. Download this project.
 3. Fill in the App ID in *config.js* in the *utils* folder of this project:
 
