@@ -318,7 +318,9 @@ Page({
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide: function() {},
+  onHide: function() {
+    
+  },
 
   onError: function(e) {
     Utils.log(`error: ${JSON.stringify(e)}`);
@@ -859,5 +861,12 @@ Page({
         });
       }
     });
+    
+    // token 过期
+    // 开启此监听需要获取 2.4.7 版本 sdk
+    // client.on("onTokenPrivilegeDidExpire", () => {
+    //   console.log('当前 token 已过期，请更新 token 并重新加入频道')
+    // }); 
+
   }
 })
