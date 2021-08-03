@@ -46,11 +46,18 @@ If you have enabled the App Certificate, you will need to generate the Token/Dyn
     	
 See [Token](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_native?platform=Android) or [Dynamic Key](https://docs.agora.io/en/2.2/product/Video/Agora%20Basics/key_web?platform=Web) for generating the Token or Key at the server.
 
-## Contact Us
+## Feedback
 
-* You can find the API document at [Developer Center](http://docs.agora.io/en/).
-* You can report issues about this demo at [issue](https://github.com/AgoraIO/Agora-Miniapp-Tutorial/issues).
+If you have any problems or suggestions regarding the sample projects, feel free to file an [issue](https://github.com/AgoraIO/Agora-Miniapp-Tutorial/issues).
+
+## Related resources
+
+- Check our [FAQ](https://docs.agora.io/en/faq) to see if your issue has been recorded.
+- Dive into [Agora SDK Samples](https://github.com/AgoraIO) to see more tutorials
+- Take a look at [Agora Use Case](https://github.com/AgoraIO-usecase) for more complicated real use case
+- Repositories managed by developer communities can be found at [Agora Community](https://github.com/AgoraIO-Community)
+- If you encounter problems during integration, feel free to ask questions in [Stack Overflow](https://stackoverflow.com/questions/tagged/agora.io)
 
 ## License
 
-The MIT License (MIT).
+The sample projects are under the MIT license.
