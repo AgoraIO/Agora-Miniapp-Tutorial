@@ -669,15 +669,16 @@ Page({
       }
       let client = this.client
       this.role = "broadcaster"
-      client.setRole(this.role)
-      Utils.log(`client switching role to ${this.role}`);
-      client.publish(url => {
-        Utils.log(`client publish success`);
-        resolve(url);
-      }, e => {
-        Utils.log(`client publish failed: ${e.code} ${e.reason}`);
-        reject(e)
-      });
+      client.setRole(this.role, ({updateURL}) => {
+        Utils.log(`client switching role to ${this.role}`);
+        client.publish(updateURL => {
+          Utils.log(`client publish success`);
+          resolve(updateURL);
+        }, e => {
+          Utils.log(`client publish failed: ${e.code} ${e.reason}`);
+          reject(e)
+        });
+      })
     })
   },
 
