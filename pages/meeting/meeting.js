@@ -567,11 +567,11 @@ Page({
       };
       AgoraMiniappSDK.LOG.setLogLevel(-1);
       this.client = client;
-      client.setRole(this.role);
       client.init(APPID, () => {
         Utils.log(`client init success`);
         // pass key instead of undefined if certificate is enabled
         client.join(undefined, channel, uid, () => {
+          client.setRole(this.role);
           Utils.log(`client join channel success`);
           //and get my stream publish url
           if (this.isBroadcaster()) {
@@ -671,13 +671,15 @@ Page({
       this.role = "broadcaster"
       client.setRole(this.role, ({updateURL}) => {
         Utils.log(`client switching role to ${this.role}`);
-        client.publish(updateURL => {
-          Utils.log(`client publish success`);
-          resolve(updateURL);
-        }, e => {
-          Utils.log(`client publish failed: ${e.code} ${e.reason}`);
-          reject(e)
-        });
+        setTimeout(()=>{
+          client.publish(updateURL => {
+            Utils.log(`client publish success`);
+            resolve(updateURL);
+          }, e => {
+            Utils.log(`client publish failed: ${e.code} ${e.reason}`);
+            reject(e)
+          });
+        }, 2000)
       })
     })
   },
