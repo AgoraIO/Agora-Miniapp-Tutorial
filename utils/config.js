@@ -1,6 +1,6 @@
 const APPID = "";
 
-if(APPID === ""){
+if (APPID === "") {
   wx.showToast({
     title: `请在config.js中提供正确的appid`,
     icon: 'none',

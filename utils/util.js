@@ -1,10 +1,8 @@
-let logitems = [];
-let dbgRtmp = false;
 let systemInfoChecked = false;
-let uid = `${parseInt(Math.random() * 1000000)}`;
+let uid = parseInt(Math.random() * 1000000);
 let timer;
 
-const debounce = function(fn, delay) {
+const debounce = function (fn, delay) {
   return function () {
     let context = this
     let args = arguments
@@ -50,16 +48,6 @@ const requestPermission = (scope, cb) => {
 }
 
 
-const log = (msg, level) => {
-  let time = formatTime(new Date());
-  logitems.push(`${time}: ${msg}`);
-  if (level === "error") {
-    console.error(`${time}: ${msg}`);
-  } else {
-    console.log(`${time}: ${msg}`);
-  }
-}
-
 const getUid = () => {
   return uid;
 }
@@ -73,7 +61,7 @@ const checkSystemInfo = (app) => {
     systemInfoChecked = true;
     wx.getSystemInfo({
       success: function (res) {
-        log(`${JSON.stringify(res)}`);
+        console.log(`${JSON.stringify(res)}`);
         let sdkVersion = res.SDKVersion;
         let version_items = sdkVersion.split(".");
         let major_version = parseInt(version_items[0]);
@@ -99,14 +87,11 @@ const checkSystemInfo = (app) => {
   }
 }
 
-  module.exports = {
-    getUid: getUid,
-    checkSystemInfo: checkSystemInfo,
-    formatTime: formatTime,
-    requestPermission: requestPermission,
-    log: log,
-    clearLogs: function () {logitems = []},
-    getLogs: function () { return logitems },
-    mashupUrl: mashupUrl,
-    debounce: debounce
-  }
+module.exports = {
+  getUid: getUid,
+  checkSystemInfo: checkSystemInfo,
+  formatTime: formatTime,
+  requestPermission: requestPermission,
+  mashupUrl: mashupUrl,
+  debounce: debounce
+}

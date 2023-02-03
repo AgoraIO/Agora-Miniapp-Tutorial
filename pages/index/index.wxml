@@ -5,18 +5,14 @@
       <image class="logo" style="width: 300rpx; height: 200rpx;" mode="aspectFit" src="../../images/logo.png"></image>
       <text class="h1">声网小程序实时连麦</text>
     </view>
-    <view class="user-section flex-center-column">
-      <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"></image>
-      <text class="userinfo-nickname">{{userInfo.nickName}}</text>
-    </view>
     <view class="form-section flex-center-column">
       <view class="inputWrapper">
         <input placeholder-style='color:#A3D1E0' class="channelInput" placeholder='输入房间名' bindinput="onInputChannel" bindconfirm="onInputChannel" bindblur="onInputChannel"></input>
       </view>
-      <button plain="true" open-type="getUserInfo" bindgetuserinfo="onGotUserInfo" disabled="{{disableJoin}}" class="joinBtn">加入房间</button>
+      <button plain="true" disabled="{{disableJoin}}" class="joinBtn" bindtap="join">加入房间</button>
     </view>
     <view class="footer flex-center-column">
-      <text>Powered by Agora. Build v1.1.1180907</text>
+      <text>Powered by Agora. Build v{{version}}</text>
     </view>
   </view>
 </view>

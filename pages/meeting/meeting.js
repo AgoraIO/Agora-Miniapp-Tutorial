@@ -6,12 +6,6 @@ const max_user = 10;
 const Layouter = require("../../utils/layout.js");
 const APPID = require("../../utils/config.js").APPID;
 
-/**
- * log relevant, remove these part and relevant code if not needed
- */
-const Uploader = require("../../utils/uploader.js")
-const LogUploader = Uploader.LogUploader;
-const LogUploaderTask = Uploader.LogUploaderTask;
 
 Page({
 
@@ -49,14 +43,14 @@ Page({
     /**
      * debug
      */
-    debug: false
+    debug: false,
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
-  onLoad: function(options) {
-    Utils.log(`onLoad`);
+  onLoad(options) {
+    console.log(`onLoad`);
     // get channel from page query param
     this.channel = options.channel;
     // default role to broadcaster
@@ -69,7 +63,6 @@ Page({
     this.layouter = null;
     // prevent user from clicking leave too fast
     this.leaving = false;
-
     // page setup
     wx.setNavigationBarTitle({
       title: `${this.channel}(${this.uid})`
@@ -77,72 +70,48 @@ Page({
     wx.setKeepScreenOn({
       keepScreenOn: true
     });
-
-    /**
-     * please remove this part in your production environment
-     */
-    if (/^sdktest.*$/.test(this.channel)) {
-      this.testEnv = true
-      wx.showModal({
-        title: '提示',
-        content: '您正处于测试环境',
-        showCancel: false
-      })
-    }
   },
 
   /**
    * 生命周期函数--监听页面初次渲染完成
    */
-  onReady: function() {
+  async onReady() {
     let channel = this.channel;
     let uid = this.uid;
-    Utils.log(`onReady`);
-
+    console.log(`onReady`);
     // schedule log auto update, remove this if this is not needed
     this.logTimer = setInterval(() => {
       this.uploadLogs();
     }, 60 * 60 * 1000);
-
     // init layouter control
     this.initLayouter();
-
-    // init agora channel
-    this.initAgoraChannel(uid, channel).then(url => {
-      Utils.log(`channel: ${channel}, uid: ${uid}`);
-      Utils.log(`pushing ${url}`);
+    try {
+      // init agora channel
+      const url = await this.initAgoraChannel(uid, channel)
+      console.log(`channel: ${channel}, uid: ${uid}, pushing ${url}`);
       let ts = new Date().getTime();
-
       if (this.isBroadcaster()) {
         // first time init, add pusher media to view
         this.addMedia(0, this.uid, url, {
           key: ts
         });
       }
-    }).catch(e => {
-      Utils.log(`init agora client failed: ${e}`);
+    } catch (e) {
       wx.showToast({
         title: `客户端初始化失败`,
         icon: 'none',
         duration: 5000
       });
-    });
+    }
   },
 
-  /**
-   * 只有提供了该回调才会出现转发选项
-   */
-  onShareAppMessage() {
-
-  },
-
-  /**
+  /** 
    * calculate size based on current media length
    * sync the layout info into each media object
    */
   syncLayout(media) {
     let sizes = this.layouter.getSize(media.length);
-    for (let i = 0; i < sizes.length; i++) {
+    for (let i = 0;i < sizes.length;i++) {
       let size = sizes[i];
       let item = media[i];
 
@@ -181,7 +150,7 @@ Page({
    * new media component life cycle event ready will then be called
    */
   addMedia(mediaType, uid, url, options) {
-    Utils.log(`add media ${mediaType} ${uid} ${url}`);
+    console.log(`add media ${mediaType} ${uid} ${url}`);
     let media = this.data.media || [];
 
     if (mediaType === 0) {
@@ -220,8 +189,8 @@ Page({
   /**
    * remove media from view
    */
-  removeMedia: function(uid) {
-    Utils.log(`remove media ${uid}`);
+  removeMedia(uid) {
+    console.log(`remove media ${uid}`);
     let media = this.data.media || [];
     media = media.filter(item => {
       return `${item.uid}` !== `${uid}`
@@ -231,7 +200,7 @@ Page({
       media = this.syncLayout(media);
       this.refreshMedia(media);
     } else {
-      Utils.log(`media not changed: ${JSON.stringify(media)}`)
+      console.log(`media not changed: ${JSON.stringify(media)}`)
       return Promise.resolve();
     }
   },
@@ -241,16 +210,16 @@ Page({
    * the media component will be fully refreshed if you try to update key
    * property.
    */
-  updateMedia: function(uid, options) {
-    Utils.log(`update media ${uid} ${JSON.stringify(options)}`);
+  updateMedia(uid, options) {
+    console.log(`update media ${uid} ${JSON.stringify(options)}`);
     let media = this.data.media || [];
     let changed = false;
-    for (let i = 0; i < media.length; i++) {
+    for (let i = 0;i < media.length;i++) {
       let item = media[i];
       if (`${item.uid}` === `${uid}`) {
         media[i] = Object.assign(item, options);
         changed = true;
-        Utils.log(`after update media ${uid} ${JSON.stringify(item)}`)
+        console.log(`after update media ${uid} ${JSON.stringify(item)}`)
         break;
       }
     }
@@ -258,7 +227,7 @@ Page({
     if (changed) {
       return this.refreshMedia(media);
     } else {
-      Utils.log(`media not changed: ${JSON.stringify(media)}`)
+      console.log(`media not changed: ${JSON.stringify(media)}`)
       return Promise.resolve();
     }
   },
@@ -267,9 +236,9 @@ Page({
    * call setData to update a list of media to this.data.media
    * this will trigger UI re-rendering
    */
-  refreshMedia: function(media) {
+  refreshMedia(media) {
     return new Promise((resolve) => {
-      for (let i = 0; i < media.length; i++) {
+      for (let i = 0;i < media.length;i++) {
         if (i < max_user) {
           //show
           media[i].holding = false;
@@ -285,7 +254,7 @@ Page({
         });
       }
 
-      Utils.log(`updating media: ${JSON.stringify(media)}`);
+      console.log(`updating media: ${JSON.stringify(media)}`);
       this.setData({
         media: media
       }, () => {
@@ -297,7 +266,7 @@ Page({
   /**
    * 生命周期函数--监听页面显示
    */
-  onShow: function() {
+  onShow() {
     let media = this.data.media || [];
     media.forEach(item => {
       if (item.type === 0) {
@@ -306,7 +275,7 @@ Page({
       }
       let player = this.getPlayerComponent(item.uid);
       if (!player) {
-        Utils.log(`player ${item.uid} component no longer exists`, "error");
+        console.log(`player ${item.uid} component no longer exists`, "error");
       } else {
         // while in background, the player maybe added but not starting
         // in this case we need to start it once come back
@@ -318,19 +287,19 @@ Page({
   /**
    * 生命周期函数--监听页面隐藏
    */
-  onHide: function() {
-    
+  onHide() {
+
   },
 
-  onError: function(e) {
-    Utils.log(`error: ${JSON.stringify(e)}`);
+  onError(e) {
+    console.log(`error: ${JSON.stringify(e)}`);
   },
 
   /**
    * 生命周期函数--监听页面卸载
    */
-  onUnload: function() {
-    Utils.log(`onUnload`);
+  async onUnload() {
+    console.log(`onUnload`);
     clearInterval(this.logTimer);
     clearTimeout(this.reconnectTimer);
     this.logTimer = null;
@@ -343,22 +312,17 @@ Page({
       let indexPage = pages[0];
       indexPage.unlockJoin();
     }
-
     // unpublish sdk and leave channel
     if (this.isBroadcaster()) {
-      try {
-        this.client && this.client.unpublish();
-      } catch (e) {
-        Utils.log(`unpublish failed ${e}`);
-      }
+      await this.client.unpublish();
     }
-    this.client && this.client.leave();
+    await this.client.leave();
   },
 
   /**
    * callback when leave button called
    */
-  onLeave: function() {
+  onLeave() {
     if (!this.leaving) {
       this.leaving = true;
       this.navigateBack();
@@ -372,8 +336,8 @@ Page({
    * we have no page to go back, in this case just redirect
    * to index page
    */
-  navigateBack: function() {
-    Utils.log(`attemps to navigate back`);
+  navigateBack() {
+    console.log(`attemps to navigate back`);
     if (getCurrentPages().length > 1) {
       //have pages on stack
       wx.navigateBack({});
@@ -388,8 +352,8 @@ Page({
   /**
    * 推流状态更新回调
    */
-  onPusherFailed: function() {
-    Utils.log('pusher failed completely', "error");
+  onPusherFailed() {
+    console.log('pusher failed completely', "error");
     wx.showModal({
       title: '发生错误',
       content: '推流发生错误，请重新进入房间重试',
@@ -403,19 +367,11 @@ Page({
   /**
    * 静音回调
    */
-  onMute: function() {
+  async onMute() {
     if (!this.data.muted) {
-      this.client.muteLocal('audio', () => {
-        console.log('muteLocal success')
-      }, err => {
-        console.log(err)
-      });
+      await this.client.muteLocal('audio')
     } else {
-      this.client.unmuteLocal('audio', () => {
-        console.log('unmuteLocal success')
-      }, err => {
-        console.log(err)
-      });
+      await this.client.unmuteLocal('audio')
     }
     this.setData({
       muted: !this.data.muted
@@ -425,8 +381,8 @@ Page({
   /**
    * 摄像头方向切换回调
    */
-  onSwitchCamera: function() {
-    Utils.log(`switching camera`);
+  onSwitchCamera() {
+    console.log(`switching camera`);
     // get pusher component via id
     const agoraPusher = this.getPusherComponent();
     agoraPusher && agoraPusher.switchCamera();
@@ -435,7 +391,7 @@ Page({
   /**
    * 美颜回调
    */
-  onMakeup: function() {
+  onMakeup() {
     let beauty = this.data.beauty == 5 ? 0 : 5;
     this.setData({
       beauty: beauty
@@ -445,75 +401,46 @@ Page({
   /**
    * 上传日志
    */
-  uploadLogs: function() {
-    let logs = Utils.getLogs();
-    Utils.clearLogs();
-
-    let totalLogs = logs.length;
-    let tasks = [];
-    let part = 0;
-    let ts = new Date().getTime();
-    // 1w logs per task slice
-    const sliceSize = 500;
-    do {
-      let content = logs.splice(0, sliceSize);
-      tasks.push(new LogUploaderTask(content, this.channel, part++, ts, this.uid));
-    } while (logs.length > sliceSize)
-    wx.showLoading({
-      title: '0%',
-      mask: true
-    })
-    LogUploader.off("progress").on("progress", e => {
-      let remain = e.remain;
-      let total = e.total;
-      Utils.log(`log upload progress ${total - remain}/${total}`);
-      if (remain === 0) {
-        wx.hideLoading();
-        wx.showToast({
-          title: `上传成功`,
-        });
-      } else {
-        wx.showLoading({
-          mask: true,
-          title: `${((total - remain) / total * 100).toFixed(2)}%`,
-        })
-      }
-    });
-    LogUploader.on("error"), e => {
-      wx.hideLoading();
+  async uploadLogs() {
+    try {
+      wx.showLoading({
+        title: '上传中...',
+        mask: true
+      })
+      await AgoraMiniappSDK.LOG.uploadLogs()
       wx.showToast({
-        title: `上传失败: ${e}`,
+        title: `上传成功`,
       });
+    } catch (err) {
+      console.error(err)
+      wx.showToast({
+        title: `上传失败`,
+      });
+    } finally {
+      wx.hideLoading()
     }
-    LogUploader.scheduleTasks(tasks);
   },
 
   /**
    * 上传日志回调
    */
-  onSubmitLog: function() {
+  onSubmitLog() {
     let page = this;
     let mediaAction = this.isBroadcaster() ? "下麦" : "上麦"
     wx.showActionSheet({
       itemList: [mediaAction, "上传日志"],
-      success: res => {
+      success: async res => {
         let tapIndex = res.tapIndex;
         if (tapIndex == 0) {
           if (this.isBroadcaster()) {
-            this.becomeAudience().then(() => {
-              this.removeMedia(this.uid);
-            }).catch(e => {
-              Utils.log(`switch to audience failed ${e.stack}`);
-            })
+            await this.becomeAudience()
+            this.removeMedia(this.uid)
           } else {
             let ts = new Date().getTime();
-            this.becomeBroadcaster().then(url => {
-              this.addMedia(0, this.uid, url, {
-                key: ts
-              });
-            }).catch(e => {
-              Utils.log(`switch to broadcaster failed ${e.stack}`);
-            })
+            const url = await this.becomeBroadcaster()
+            this.addMedia(0, this.uid, url, {
+              key: ts
+            });
           }
         } else if (tapIndex === 1) {
           this.setData({
@@ -522,7 +449,7 @@ Page({
           wx.showModal({
             title: '遇到使用问题?',
             content: '点击确定可以上传日志，帮助我们了解您在使用过程中的问题',
-            success: function(res) {
+            success: function (res) {
               if (res.confirm) {
                 console.log('用户点击确定')
                 page.uploadLogs();
@@ -539,7 +466,7 @@ Page({
   /**
    * 获取屏幕尺寸以用于之后的视窗计算
    */
-  initLayouter: function() {
+  initLayouter() {
     // get window size info from systemInfo
     const systemInfo = app.globalData.systemInfo;
     // 64 is the height of bottom toolbar
@@ -549,107 +476,45 @@ Page({
   /**
    * 初始化sdk推流
    */
-  initAgoraChannel: function(uid, channel) {
-    return new Promise((resolve, reject) => {
-      let client = {}
-      if (this.testEnv) {
-        client = new AgoraMiniappSDK.Client({
-          servers: ["wss://miniapp.agoraio.cn/120-131-14-112/api"]
-        });
-      } else {
-        client = new AgoraMiniappSDK.Client()
-      }
-      //subscribe stream events
-      this.subscribeEvents(client);
-      AgoraMiniappSDK.LOG.onLog = (text) => {
-        // callback to expose sdk logs
-        Utils.log(text);
-      };
-      AgoraMiniappSDK.LOG.setLogLevel(-1);
-      this.client = client;
-      client.init(APPID, () => {
-        Utils.log(`client init success`);
-        // pass key instead of undefined if certificate is enabled
-        client.join(undefined, channel, uid, () => {
-          client.setRole(this.role);
-          Utils.log(`client join channel success`);
-          //and get my stream publish url
-          if (this.isBroadcaster()) {
-            client.publish(url => {
-              Utils.log(`client publish success`);
-              resolve(url);
-            }, e => {
-              Utils.log(`client publish failed: ${e.code} ${e.reason}`);
-              reject(e)
-            });
-          } else {
-            resolve();
-          }
-        }, e => {
-          Utils.log(`client join channel failed: ${e.code} ${e.reason}`);
-          reject(e)
-        })
-      }, e => {
-        Utils.log(`client init failed: ${e} ${e.code} ${e.reason}`);
-        reject(e);
-      });
-    });
+  async initAgoraChannel(uid, channel) {
+    this.client = new AgoraMiniappSDK.Client()
+    // set log level
+    AgoraMiniappSDK.LOG.setLogLevel(-1);
+    //subscribe stream events
+    this.subscribeEvents();
+    await this.client.init(APPID)
+    await this.client.setRole(this.role)
+    await this.client.join(undefined, channel, uid)
+    let url = ''
+    if (this.isBroadcaster()) {
+      url = await this.client.publish(url);
+    }
+    return url
   },
 
-  reinitAgoraChannel: function(uid, channel) {
-    return new Promise((resolve, reject) => {
-      let client = {}
-      if (this.testEnv) {
-        client = new AgoraMiniappSDK.Client({
-          servers: ["wss://miniapp.agoraio.cn/120-131-14-112/api"]
-        });
-      } else {
-        client = new AgoraMiniappSDK.Client()
-      }
-      //subscribe stream events
-      this.subscribeEvents(client);
-      AgoraMiniappSDK.LOG.onLog = (text) => {
-        // callback to expose sdk logs
-        Utils.log(text);
-      };
-      AgoraMiniappSDK.LOG.setLogLevel(-1);
-      let uids = this.data.media.map(item => {
-        return item.uid;
-      });
-      this.client = client;
-      client.setRole(this.role);
-      client.init(APPID, () => {
-        Utils.log(`client init success`);
-        // pass key instead of undefined if certificate is enabled
-        Utils.log(`rejoin with uids: ${JSON.stringify(uids)}`);
-        client.rejoin(undefined, channel, uid, uids, () => {
-          Utils.log(`client join channel success`);
-          if (this.isBroadcaster()) {
-            client.publish(url => {
-              Utils.log(`client publish success`);
-              resolve(url);
-            }, e => {
-              Utils.log(`client publish failed: ${e.code} ${e.reason}`);
-              reject(e)
-            });
-          } else {
-            resolve();
-          }
-        }, e => {
-          Utils.log(`client join channel failed: ${e.code} ${e.reason}`);
-          reject(e)
-        })
-      }, e => {
-        Utils.log(`client init failed: ${e} ${e.code} ${e.reason}`);
-        reject(e);
-      });
+  async reinitAgoraChannel(uid, channel) {
+    this.client = new AgoraMiniappSDK.Client()
+    // set log level
+    AgoraMiniappSDK.LOG.setLogLevel(-1);
+    //subscribe stream events
+    this.subscribeEvents();
+    let uids = this.data.media.map(item => {
+      return item.uid;
     });
+    await this.client.init(APPID)
+    await this.client.setRole(this.role);
+    await this.client.rejoin(undefined, channel, uid, uids)
+    let url = ''
+    if (this.isBroadcaster()) {
+      url = await this.client.publish()
+    }
+    return url
   },
 
   /**
    * return player component via uid
    */
-  getPlayerComponent: function(uid) {
+  getPlayerComponent(uid) {
     const agoraPlayer = this.selectComponent(`#rtc-player-${uid}`);
     return agoraPlayer;
   },
@@ -657,74 +522,43 @@ Page({
   /**
    * return pusher component
    */
-  getPusherComponent: function() {
+  getPusherComponent() {
     const agorapusher = this.selectComponent(`#rtc-pusher`);
     return agorapusher;
   },
 
-  becomeBroadcaster: function() {
-    return new Promise((resolve, reject) => {
-      if (!this.client) {
-        return reject(new Error("no client available"))
-      }
-      let client = this.client
-      this.role = "broadcaster"
-      client.setRole(this.role, ({updateURL}) => {
-        Utils.log(`client switching role to ${this.role}`);
-        setTimeout(()=>{
-          client.publish(updateURL => {
-            Utils.log(`client publish success`);
-            resolve(updateURL);
-          }, e => {
-            Utils.log(`client publish failed: ${e.code} ${e.reason}`);
-            reject(e)
-          });
-        }, 2000)
-      })
-    })
+  async becomeBroadcaster() {
+    this.role = "broadcaster"
+    await this.client.setRole(this.role)
+    const url = await this.client.publish()
+    return url
   },
 
-  becomeAudience: function() {
-    return new Promise((resolve, reject) => {
-      if (!this.client) {
-        return reject(new Error("no client available"))
-      }
-
-      let client = this.client
-      client.unpublish(() => {
-        Utils.log(`client unpublish success`);
-        this.role = "audience"
-        Utils.log(`client switching role to ${this.role}`);
-        client.setRole(this.role)
-        resolve();
-      }, e => {
-        Utils.log(`client unpublish failed: ${e.code} ${e.reason}`);
-        reject(e)
-      });
-    })
+  async becomeAudience() {
+    await this.client.unpublish()
+    this.role = "audience"
+    await this.client.setRole(this.role)
   },
 
   /**
    * reconnect when bad things happens...
    */
-  reconnect: function() {
+  async reconnect() {
     wx.showToast({
       title: `尝试恢复链接...`,
       icon: 'none',
       duration: 5000
     });
     // always destroy client first
-    // *important* miniapp supports 2 websockets maximum at same time
+    // *important* miniapp supports 5 websockets maximum at same time
     // do remember to destroy old client first before creating new ones
-    this.client && this.client.destroy();
-    this.reconnectTimer = setTimeout(() => {
+    await this.client.destroy();
+    this.reconnectTimer = setTimeout(async () => {
       let uid = this.uid;
       let channel = this.channel;
-      this.reinitAgoraChannel(uid, channel).then(url => {
-        Utils.log(`channel: ${channel}, uid: ${uid}`);
-        Utils.log(`pushing ${url}`);
+      try {
+        const url = await this.reinitAgoraChannel(uid, channel)
         let ts = new Date().getTime();
-
         if (this.isBroadcaster()) {
           if (this.hasMedia(0, this.uid)) {
             // pusher already exists in media list
@@ -734,30 +568,52 @@ Page({
             });
           } else {
             // pusher not exists in media list
-            Utils.log(`pusher not yet exists when rejoin...adding`);
+            console.log(`pusher not yet exists when rejoin...adding`);
             this.addMedia(0, this.uid, url, {
               key: ts
             });
           }
         }
-      }).catch(e => {
-        Utils.log(`reconnect failed: ${e}`);
+      } catch (e) {
+        console.log(`reconnect failed: ${e}`);
+        // remember control max reconnect times
         return this.reconnect();
-      });
+      }
     }, 1 * 1000);
   },
 
-  /**
-   * 如果
-   */
-  isBroadcaster: function() {
+  isBroadcaster() {
     return this.role === "broadcaster";
+  },
+
+  onPusherNetstatus: function (e) {
+    this.client.updatePusherNetStatus(e.detail);
+  },
+
+  onPusherStatechange: function (e) {
+    this.client.updatePusherStateChange(e.detail);
+  },
+
+  onPlayerNetstatus: function (e) {
+    // 遍历所有远端流进行数据上报
+    let allPlayerStream = this.data.media.filter(m => m.uid !== this.uid);
+    allPlayerStream.forEach(item => {
+      this.client.updatePlayerNetStatus(item.uid, e.detail);
+    });
+  },
+
+  onPlayerStatechange: function (e) {
+    let allPlayerStream = this.data.media.filter(m => m.uid !== this.uid);
+    // 这里 需要去获取所有远端流的 uid
+    allPlayerStream.forEach(item => {
+      this.client.updatePlayerStateChange(item.uid, e.detail);
+    });
   },
 
   /**
    * 注册stream事件
    */
-  subscribeEvents: function(client) {
+  subscribeEvents() {
     /**
      * sometimes the video could be rotated
      * this event will be fired with ratotion
@@ -766,8 +622,8 @@ Page({
      * in case of 270 degrees, the video could be
      * up side down
      */
-    client.on("video-rotation", (e) => {
-      Utils.log(`video rotated: ${e.rotation} ${e.uid}`)
+    this.client.on("video-rotation", (e) => {
+      console.log(`video rotated: ${e.rotation} ${e.uid}`)
       setTimeout(() => {
         const player = this.getPlayerComponent(e.uid);
         player && player.rotate(e.rotation);
@@ -776,51 +632,46 @@ Page({
     /**
      * fired when new stream join the channel
      */
-    client.on("stream-added", e => {
+    this.client.on("stream-added", async e => {
       let uid = e.uid;
       const ts = new Date().getTime();
-      Utils.log(`stream ${uid} added`);
+      console.log(`stream ${uid} added`);
       /**
        * subscribe to get corresponding url
        */
-      client.subscribe(uid, (url, rotation) => {
-        Utils.log(`stream ${uid} subscribed successful`);
-        let media = this.data.media || [];
-        let matchItem = null;
-        for (let i = 0; i < media.length; i++) {
-          let item = this.data.media[i];
-          if (`${item.uid}` === `${uid}`) {
-            //if existing, record this as matchItem and break
-            matchItem = item;
-            break;
-          }
+      const { url, rotation } = await this.client.subscribe(uid);
+      let media = this.data.media || [];
+      let matchItem = null;
+      for (let i = 0;i < media.length;i++) {
+        let item = this.data.media[i];
+        if (`${item.uid}` === `${uid}`) {
+          //if existing, record this as matchItem and break
+          matchItem = item;
+          break;
         }
-
-        if (!matchItem) {
-          //if not existing, add new media
-          this.addMedia(1, uid, url, {
-            key: ts,
-            rotation: rotation
-          })
-        } else {
-          // if existing, update property
-          // change key property to refresh live-player
-          this.updateMedia(matchItem.uid, {
-            url: url,
-            key: ts,
-          });
-        }
-      }, e => {
-        Utils.log(`stream subscribed failed ${e} ${e.code} ${e.reason}`);
-      });
+      }
+      if (!matchItem) {
+        //if not existing, add new media
+        this.addMedia(1, uid, url, {
+          key: ts,
+          rotation: rotation
+        })
+      } else {
+        // if existing, update property
+        // change key property to refresh live-player
+        this.updateMedia(matchItem.uid, {
+          url: url,
+          key: ts,
+        });
+      }
     });
 
     /**
      * remove stream when it leaves the channel
      */
-    client.on("stream-removed", e => {
+    this.client.on("stream-removed", e => {
       let uid = e.uid;
-      Utils.log(`stream ${uid} removed`);
+      console.log(`stream ${uid} removed`);
       this.removeMedia(uid);
     });
 
@@ -830,12 +681,11 @@ Page({
      * it's also recommended to wait for few seconds before
      * reconnect attempt
      */
-    client.on("error", err => {
+    this.client.on("error", err => {
       let errObj = err || {};
       let code = errObj.code || 0;
       let reason = errObj.reason || "";
-      Utils.log(`error: ${code}, reason: ${reason}`);
-      let ts = new Date().getTime();
+      console.log(`error: ${code}, reason: ${reason}`);
       if (code === 501 || code === 904) {
         this.reconnect();
       }
@@ -849,14 +699,14 @@ Page({
      * NOTE you can ignore such event if it's for pusher or happens before
      * stream-added
      */
-    client.on('update-url', e => {
-      Utils.log(`update-url: ${JSON.stringify(e)}`);
+    this.client.on('update-url', e => {
+      console.log(`update-url: ${JSON.stringify(e)}`);
       let uid = e.uid;
       let url = e.url;
       let ts = new Date().getTime();
       if (`${uid}` === `${this.uid}`) {
         // if it's not pusher url, update
-        Utils.log(`ignore update-url`);
+        console.log(`ignore update-url`);
       } else {
         this.updateMedia(uid, {
           url: url,
@@ -864,12 +714,13 @@ Page({
         });
       }
     });
-    
-    // token 过期
-    // 开启此监听需要获取 2.4.7 版本 sdk
-    // client.on("onTokenPrivilegeDidExpire", () => {
-    //   console.log('当前 token 已过期，请更新 token 并重新加入频道')
-    // }); 
 
+    this.client.on("token-privilege-will-expire", () => {
+      console.log("当前 token 即将过期，请更新 token");
+    });
+
+    this.client.on("token-privilege-did-expire", () => {
+      console.log("当前 token 已过期，请更新 token 并重新加入频道");
+    });
   }
 })

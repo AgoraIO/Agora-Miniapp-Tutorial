@@ -20,27 +20,9 @@ page {
   margin-bottom: 10rpx;
 }
 
-.content .user-section{
-  margin-bottom: 40rpx;
-}
-
-
-.content .userinfo-avatar {
-  width: 128rpx;
-  height: 128rpx;
-  margin: 40rpx 20rpx 20rpx 20rpx;
-  border-radius: 128rpx;
-  border: 2px solid white;
-  box-shadow: 1px 1px 1px rgba(0,0,0,0.3);
-}
-
-.content .userinfo-nickname {
-  color: #2F597A;
-  font-size: 28rpx;
-  text-align: center;
-}
 
 .content .form-section{
+  margin-top: 150rpx;
   width: 100%;
 }
 

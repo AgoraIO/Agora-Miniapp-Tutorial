@@ -1,5 +1,4 @@
 // components/agora-pusher.js
-const Utils = require("../../utils/util.js")
 
 Component({
   /**
@@ -53,7 +52,7 @@ Component({
       type: String,
       value: "loading",
       observer: function (newVal, oldVal, changedPath) {
-        Utils.log(`player status changed from ${oldVal} to ${newVal}`);
+        console.log(`player status changed from ${oldVal} to ${newVal}`);
       }
     },
     url: {
@@ -62,7 +61,7 @@ Component({
       observer: function (newVal, oldVal, changedPath) {
         // 属性被改变时执行的函数（可选），也可以写成在methods段中定义的方法名字符串, 如：'_propertyChange'
         // 通常 newVal 就是新设置的数据， oldVal 是旧数据
-        Utils.log(`pusher url changed from ${oldVal} to ${newVal}, path: ${changedPath}`);
+        console.log(`pusher url changed from ${oldVal} to ${newVal}, path: ${changedPath}`);
       }
     }
   },
@@ -85,10 +84,10 @@ Component({
      * as this will be automatically called in component ready method
      */
     start() {
-      Utils.log(`starting pusher`);
+      console.log(`starting pusher`);
       this.data.pusherContext.stop();
       if (this.data.detached) {
-        Utils.log(`try to start pusher while component already detached`);
+        console.log(`try to start pusher while component already detached`);
         return;
       }
       this.data.pusherContext.start();
@@ -98,7 +97,7 @@ Component({
      * stop live pusher context
      */
     stop() {
-      Utils.log(`stopping pusher`);
+      console.log(`stopping pusher`);
       this.data.pusherContext.stop();
     },
 
@@ -113,10 +112,11 @@ Component({
      * 推流状态更新回调
      */
     recorderStateChange: function (e) {
-      Utils.log(`live-pusher code: ${e.detail.code} - ${e.detail.message}`)
+      this.triggerEvent('statechange', e);
+      console.log(`live-pusher code: ${e.detail.code} - ${e.detail.message}`)
       if (e.detail.code === -1307) {
         //re-push
-        Utils.log('live-pusher stopped', "error");
+        console.log('live-pusher stopped', "error");
         this.setData({
           status: "error"
         })
@@ -126,7 +126,7 @@ Component({
 
       if (e.detail.code === 1008) {
         //started
-        Utils.log(`live-pusher started`);
+        console.log(`live-pusher started`);
         if(this.data.status === "loading") {
           this.setData({
             status: "ok"
@@ -135,7 +135,7 @@ Component({
       }
     },
     recorderNetChange: function(e) {
-      Utils.log(`network: ${JSON.stringify(e.detail)}`);
+      this.triggerEvent('netstatus', e);
     }
   },
 
@@ -143,14 +143,14 @@ Component({
    * 组件生命周期
    */
   ready: function () {
-    Utils.log("pusher ready");
+    console.log("pusher ready");
     this.data.pusherContext || (this.data.pusherContext = wx.createLivePusherContext(this));
   },
   moved: function () {
-    Utils.log("pusher moved");
+    console.log("pusher moved");
    },
   detached: function () {
-    Utils.log("pusher detached");
+    console.log("pusher detached");
     // auto stop pusher when detached
     this.data.pusherContext && this.data.pusherContext.stop();
     this.data.detached = true;
