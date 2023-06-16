@@ -52,9 +52,6 @@ const getUid = () => {
   return uid;
 }
 
-const mashupUrl = (url, channel) => {
-  return url;
-}
 
 const checkSystemInfo = (app) => {
   if (!systemInfoChecked) {
@@ -66,9 +63,7 @@ const checkSystemInfo = (app) => {
         let version_items = sdkVersion.split(".");
         let major_version = parseInt(version_items[0]);
         let minor_version = parseInt(version_items[1]);
-
         app.globalData.systemInfo = res;
-
         if (major_version <= 1 && minor_version < 7) {
           wx.showModal({
             title: '版本过低',
@@ -92,6 +87,5 @@ module.exports = {
   checkSystemInfo: checkSystemInfo,
   formatTime: formatTime,
   requestPermission: requestPermission,
-  mashupUrl: mashupUrl,
   debounce: debounce
 }

@@ -1,57 +1,28 @@
-const app = getApp()
-const Utils = require('../../utils/util.js')
-
-// pages/index/index.js.js
 Page({
-  /**
-   * 页面的初始数据
-   */
   data: {
     // whether to disable join btn or not
     disableJoin: false,
     // sdk version
-    version:"2.6.0"
+    version:"2.6.1"
   },
-
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
     this.channel = "";
-    this.uid = Utils.getUid();
     this.lock = false;
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 只有提供了该回调才会出现转发选项
-   */
   onShareAppMessage() {
 
   },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
+  
   onHide() {
   },
 
-  /**
-   * 生命周期函数--监听页面卸载
-   */
   onUnload() {
 
   },
 
   join() {
     let value = this.channel || "";
-    let uid = this.uid;
     if (!value) {
       wx.showToast({
         title: '请提供一个有效的房间名',
@@ -66,11 +37,6 @@ Page({
           wx.navigateTo({
             url: `../test/test`
           });
-        } else if (value === "agora2") {
-          // go to test page if channel name is agora
-          wx.navigateTo({
-            url: `../test2/test2`
-          });
         } else {
           wx.showModal({
             title: '是否推流',
@@ -82,7 +48,7 @@ Page({
                 role = "broadcaster";
               }
               wx.navigateTo({
-                url: `../meeting/meeting?channel=${value}&uid=${uid}&role=${role}`
+                url: `../meeting/meeting?channel=${value}&&role=${role}`
               });
             }
           })

@@ -1,5 +1,4 @@
-mini-app-sdk-production.js
-mini-app-sdk-production.js.map
+mini-app-sdk.js
 project.config.json
 .DS_Store
-test2
+node_modules

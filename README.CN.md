@@ -38,8 +38,8 @@
 
     	const APPID = 'abcdefg'
     	
-4. 下载 [Agora Miniapp SDK](https://docs.agora.io/cn/Agora%20Platform/downloads)，并将 SDK 重新命名为 “mini-app-sdk-production.js"
-5. 将更名后的 "mini-app-sdk-production.js" 文件保存在本示例程序的 *lib* 文件夹下
+4. 下载 [Agora Miniapp SDK](https://docs.agora.io/cn/Agora%20Platform/downloads)，并将 SDK 重新命名为 agora-miniapp-sdk.js"
+5. 将更名后的 "agora-miniapp-sdk.js" 文件保存在本示例程序的 *lib* 文件夹下
 6. 启动微信开发者工具并导入该示例程序
 7. 输入频道名，加入频道。邀请你的朋友加入同一个频道，就可以开始视频互通了。
 

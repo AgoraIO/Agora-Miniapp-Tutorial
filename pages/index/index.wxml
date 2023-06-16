@@ -7,7 +7,8 @@
     </view>
     <view class="form-section flex-center-column">
       <view class="inputWrapper">
-        <input placeholder-style='color:#A3D1E0' class="channelInput" placeholder='输入房间名' bindinput="onInputChannel" bindconfirm="onInputChannel" bindblur="onInputChannel"></input>
+        <input placeholder-style='color:#A3D1E0' class="channelInput" placeholder='输入房间名'
+        bindinput="onInputChannel" bindconfirm="onInputChannel" bindblur="onInputChannel" value="{{channel}}"></input>
       </view>
       <button plain="true" disabled="{{disableJoin}}" class="joinBtn" bindtap="join">加入房间</button>
     </view>

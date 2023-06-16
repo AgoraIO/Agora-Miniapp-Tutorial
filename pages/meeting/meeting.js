@@ -1,17 +1,15 @@
 // pages/meeting/meeting.js
 const app = getApp()
 const Utils = require('../../utils/util.js')
-const AgoraMiniappSDK = require("../../lib/mini-app-sdk-production.js");
+const AgoraMiniappSDK = require("../../lib/agora-miniapp-sdk.js");
 const max_user = 10;
 const Layouter = require("../../utils/layout.js");
 const APPID = require("../../utils/config.js").APPID;
 
+// set log level
+AgoraMiniappSDK.LOG.setLogLevel(-1);
 
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
     /**
      * media objects array
@@ -45,16 +43,13 @@ Page({
      */
     debug: false,
   },
-
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
+  async onLoad(options) {
     console.log(`onLoad`);
+    const { channel, role = "broadcaster" } = options;
     // get channel from page query param
-    this.channel = options.channel;
+    this.channel = channel;
     // default role to broadcaster
-    this.role = options.role || "broadcaster";
+    this.role = role
     // get pre-gened uid, this uid will be different every time the app is started
     this.uid = Utils.getUid();
     // store agora client
@@ -70,14 +65,6 @@ Page({
     wx.setKeepScreenOn({
       keepScreenOn: true
     });
-  },
-
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  async onReady() {
-    let channel = this.channel;
-    let uid = this.uid;
     console.log(`onReady`);
     // schedule log auto update, remove this if this is not needed
     this.logTimer = setInterval(() => {
@@ -87,8 +74,7 @@ Page({
     this.initLayouter();
     try {
       // init agora channel
-      const url = await this.initAgoraChannel(uid, channel)
-      console.log(`channel: ${channel}, uid: ${uid}, pushing ${url}`);
+      const url = await this.initAgoraChannel(this.uid, this.channel)
       let ts = new Date().getTime();
       if (this.isBroadcaster()) {
         // first time init, add pusher media to view
@@ -102,6 +88,53 @@ Page({
         icon: 'none',
         duration: 5000
       });
+    }
+  },
+  onShow() {
+    let media = this.data.media || [];
+    media.forEach(item => {
+      if (item.type === 0) {
+        //return for pusher
+        return;
+      }
+      let player = this.getPlayerComponent(item.uid);
+      if (!player) {
+        console.log(`player ${item.uid} component no longer exists`, "error");
+      } else {
+        // while in background, the player maybe added but not starting
+        // in this case we need to start it once come back
+        player.start();
+      }
+    });
+  },
+  onError(e) {
+    console.log(`error: ${JSON.stringify(e)}`);
+  },
+
+  async onUnload() {
+    console.log(`onUnload`);
+    clearInterval(this.logTimer);
+    clearTimeout(this.reconnectTimer);
+    this.logTimer = null;
+    this.reconnectTimer = null;
+    // unlock index page join button
+    let pages = getCurrentPages();
+    if (pages.length > 1) {
+      //unlock join
+      let indexPage = pages[0];
+      indexPage.unlockJoin();
+    }
+    // unpublish sdk and leave channel
+    if (this.isBroadcaster()) {
+      await this.client.unpublish();
+    }
+    await this.client.leave();
+  },
+
+  onLeave() {
+    if (!this.leaving) {
+      this.leaving = true;
+      this.navigateBack();
     }
   },
 
@@ -127,7 +160,6 @@ Page({
     }
     return media;
   },
-
   /**
    * check if current media list has specified uid & mediaType component
    */
@@ -262,73 +294,6 @@ Page({
       });
     });
   },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-    let media = this.data.media || [];
-    media.forEach(item => {
-      if (item.type === 0) {
-        //return for pusher
-        return;
-      }
-      let player = this.getPlayerComponent(item.uid);
-      if (!player) {
-        console.log(`player ${item.uid} component no longer exists`, "error");
-      } else {
-        // while in background, the player maybe added but not starting
-        // in this case we need to start it once come back
-        player.start();
-      }
-    });
-  },
-
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  onError(e) {
-    console.log(`error: ${JSON.stringify(e)}`);
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  async onUnload() {
-    console.log(`onUnload`);
-    clearInterval(this.logTimer);
-    clearTimeout(this.reconnectTimer);
-    this.logTimer = null;
-    this.reconnectTimer = null;
-
-    // unlock index page join button
-    let pages = getCurrentPages();
-    if (pages.length > 1) {
-      //unlock join
-      let indexPage = pages[0];
-      indexPage.unlockJoin();
-    }
-    // unpublish sdk and leave channel
-    if (this.isBroadcaster()) {
-      await this.client.unpublish();
-    }
-    await this.client.leave();
-  },
-
-  /**
-   * callback when leave button called
-   */
-  onLeave() {
-    if (!this.leaving) {
-      this.leaving = true;
-      this.navigateBack();
-    }
-  },
-
 
   /**
    * navigate to previous page
@@ -478,8 +443,6 @@ Page({
    */
   async initAgoraChannel(uid, channel) {
     this.client = new AgoraMiniappSDK.Client()
-    // set log level
-    AgoraMiniappSDK.LOG.setLogLevel(-1);
     //subscribe stream events
     this.subscribeEvents();
     await this.client.init(APPID)
