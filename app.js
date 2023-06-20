@@ -8,10 +8,19 @@ App({
     wx.authorize({
       scope: 'scope.record',
       success: function () {
-        console.log("authorize success");
+        console.log("authorize record success");
       },
       fail: function () {
-        console.log("authorize fail");
+        console.log("authorize record fail");
+      }
+    });
+    wx.authorize({
+      scope: 'scope.camera',
+      success: function () {
+        console.log("authorize camera success");
+      },
+      fail: function () {
+        console.log("authorize camera fail");
       }
     });
   },

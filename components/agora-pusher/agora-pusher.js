@@ -123,18 +123,17 @@ Component({
         //emit event
         this.triggerEvent('pushfailed');
       }
-
       if (e.detail.code === 1008) {
         //started
         console.log(`live-pusher started`);
-        if(this.data.status === "loading") {
+        if (this.data.status === "loading") {
           this.setData({
             status: "ok"
           })
         }
       }
     },
-    recorderNetChange: function(e) {
+    recorderNetChange: function (e) {
       this.triggerEvent('netstatus', e);
     }
   },
@@ -145,10 +144,15 @@ Component({
   ready: function () {
     console.log("pusher ready");
     this.data.pusherContext || (this.data.pusherContext = wx.createLivePusherContext(this));
+    // if (this.data.url) {
+    //   // manual start 
+    //   console.log('pusher manual start')
+    //   this.start();
+    // }
   },
   moved: function () {
     console.log("pusher moved");
-   },
+  },
   detached: function () {
     console.log("pusher detached");
     // auto stop pusher when detached

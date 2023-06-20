@@ -43,7 +43,7 @@ Page({
      */
     debug: false,
   },
-  async onLoad(options) {
+  onLoad(options) {
     console.log(`onLoad`);
     const { channel, role = "broadcaster" } = options;
     // get channel from page query param
@@ -58,18 +58,31 @@ Page({
     this.layouter = null;
     // prevent user from clicking leave too fast
     this.leaving = false;
-    // page setup
-    wx.setNavigationBarTitle({
-      title: `${this.channel}(${this.uid})`
-    });
-    wx.setKeepScreenOn({
-      keepScreenOn: true
-    });
-    console.log(`onReady`);
     // schedule log auto update, remove this if this is not needed
     this.logTimer = setInterval(() => {
       this.uploadLogs();
     }, 60 * 60 * 1000);
+  },
+  onShow() {
+    console.log(`onShow`);
+    let media = this.data.media || [];
+    media.forEach(item => {
+      if (item.type === 0) {
+        //return for pusher
+        return;
+      }
+      let player = this.getPlayerComponent(item.uid);
+      if (!player) {
+        console.log(`player ${item.uid} component no longer exists`, "error");
+      } else {
+        // while in background, the player maybe added but not starting
+        // in this case we need to start it once come back
+        player.start();
+      }
+    });
+  },
+  async onReady() {
+    console.log(`onReady`);
     // init layouter control
     this.initLayouter();
     try {
@@ -89,22 +102,12 @@ Page({
         duration: 5000
       });
     }
-  },
-  onShow() {
-    let media = this.data.media || [];
-    media.forEach(item => {
-      if (item.type === 0) {
-        //return for pusher
-        return;
-      }
-      let player = this.getPlayerComponent(item.uid);
-      if (!player) {
-        console.log(`player ${item.uid} component no longer exists`, "error");
-      } else {
-        // while in background, the player maybe added but not starting
-        // in this case we need to start it once come back
-        player.start();
-      }
+    // page setup
+    wx.setNavigationBarTitle({
+      title: `${this.channel}(${this.uid})`
+    });
+    wx.setKeepScreenOn({
+      keepScreenOn: true
     });
   },
   onError(e) {
@@ -147,12 +150,10 @@ Page({
     for (let i = 0;i < sizes.length;i++) {
       let size = sizes[i];
       let item = media[i];
-
       if (item.holding) {
         //skip holding item
         continue;
       }
-
       item.left = parseFloat(size.x).toFixed(2);
       item.top = parseFloat(size.y).toFixed(2);
       item.width = parseFloat(size.width).toFixed(2);
