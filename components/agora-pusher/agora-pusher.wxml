@@ -3,7 +3,7 @@
   style="top: {{y}}px; left: {{x}}px; width: {{width}}px; height: {{height}}px; position: absolute;">
   <live-pusher wx:if="{{url!==''}}" style="height:{{height}}px; position: absolute; width: 100%; " url="{{url}}"
     mode="RTC" aspect="{{aspect}}" class="camera" bindstatechange="recorderStateChange"
-    bindnetstatus="recorderNetChange" background-mute="true" enable-mic="{{muted}}" enable-camera beauty="{{beauty}}"
+    bindnetstatus="recorderNetChange" background-mute="true" enable-mic="{{!muted}}" enable-camera beauty="{{beauty}}"
     max-bitrate="500" min-bitrate="200" waiting-image="https://webdemo.agora.io/away.png" debug="{{debug}}"
     autopush="true" />
   <cover-view wx-if="{{status !== 'ok'}}" class="sud flex-center-column"

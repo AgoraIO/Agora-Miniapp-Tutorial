@@ -31,7 +31,7 @@ Component({
     },
     muted: {
       type: Boolean,
-      value: !1
+      value: false
     },
     debug: {
       type: Boolean,
