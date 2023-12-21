@@ -19,7 +19,7 @@
       <button plain="true" hover-class="hover" class="camera btn" bindtap='onSwitchCamera'></button>
       <button plain="true" hover-class="hover" class="hangup btn" bindtap='onLeave'></button>
       <button plain="true" class="makeup {{beauty === 5 ?'':'off'}} btn" bindtap='onMakeup'></button>
-      <button plain="true" hover-class="hover" class="log btn" bindtap='onSubmitLog'></button>
+      <button plain="true" hover-class="hover" class="log btn" bindtap='onMore'></button>
     </view>
   </view>
 </view>

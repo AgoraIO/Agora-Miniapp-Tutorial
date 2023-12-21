@@ -1,12 +1,36 @@
 /* components/agora-player/agora-player.wxss */
 @import "../../common.wxss";
-.play-container{
+
+.play-container {
   background: black;
   display: block;
   position: absolute;
 }
 
-.sud{
+.player {
+  height: 100%;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+.sud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
   background-color: #1B2A38;
-  opacity:0.65; 
+  opacity: 0.65;
+}
+
+.info-text {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-weight: bold;
+  font-size: 28rpx;
+  color: white;
 }

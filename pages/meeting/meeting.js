@@ -2,12 +2,14 @@
 const app = getApp()
 const Utils = require('../../utils/util.js')
 const AgoraMiniappSDK = require("../../lib/agora-miniapp-sdk.js");
-const max_user = 10;
+const MAX_USER = 7;
 const Layouter = require("../../utils/layout.js");
-const APPID = require("../../utils/config.js").APPID;
+const { APPID } = require("../../utils/config.js");
 
 // set log level
-AgoraMiniappSDK.LOG.setLogLevel(-1);
+AgoraMiniappSDK.LOG.setLogLevel(0);
+// agora client instance
+let client = null
 
 Page({
   data: {
@@ -52,16 +54,10 @@ Page({
     this.role = role
     // get pre-gened uid, this uid will be different every time the app is started
     this.uid = Utils.getUid();
-    // store agora client
-    this.client = null;
     // store layouter control
     this.layouter = null;
     // prevent user from clicking leave too fast
     this.leaving = false;
-    // schedule log auto update, remove this if this is not needed
-    this.logTimer = setInterval(() => {
-      this.uploadLogs();
-    }, 60 * 60 * 1000);
   },
   onShow() {
     console.log(`onShow`);
@@ -113,28 +109,28 @@ Page({
   onError(e) {
     console.log(`error: ${JSON.stringify(e)}`);
   },
-
   async onUnload() {
     console.log(`onUnload`);
-    clearInterval(this.logTimer);
     clearTimeout(this.reconnectTimer);
-    this.logTimer = null;
     this.reconnectTimer = null;
     // unlock index page join button
     let pages = getCurrentPages();
     if (pages.length > 1) {
-      //unlock join
       let indexPage = pages[0];
       indexPage.unlockJoin();
     }
-    // unpublish sdk and leave channel
+    // unpublish 
     if (this.isBroadcaster()) {
-      await this.client.unpublish();
+      await client.unpublish();
     }
-    await this.client.leave();
+    // update log,remove this if you don't need
+    await this.uploadLogs();
+    // leave channel
+    await client.leave();
   },
 
   onLeave() {
+    console.log("onLeave")
     if (!this.leaving) {
       this.leaving = true;
       this.navigateBack();
@@ -272,7 +268,7 @@ Page({
   refreshMedia(media) {
     return new Promise((resolve) => {
       for (let i = 0;i < media.length;i++) {
-        if (i < max_user) {
+        if (i < MAX_USER) {
           //show
           media[i].holding = false;
         } else {
@@ -281,12 +277,11 @@ Page({
         }
       }
 
-      if (media.length > max_user) {
+      if (media.length > MAX_USER) {
         wx.showToast({
           title: '由于房内人数超过7人，部分视频未被加载显示',
         });
       }
-
       console.log(`updating media: ${JSON.stringify(media)}`);
       this.setData({
         media: media
@@ -335,9 +330,9 @@ Page({
    */
   async onMute() {
     if (!this.data.muted) {
-      await this.client.muteLocal('audio')
+      await client.muteLocal('audio')
     } else {
-      await this.client.unmuteLocal('audio')
+      await client.unmuteLocal('audio')
     }
     this.setData({
       muted: !this.data.muted
@@ -369,29 +364,20 @@ Page({
    */
   async uploadLogs() {
     try {
-      wx.showLoading({
-        title: '上传中...',
-        mask: true
-      })
       await AgoraMiniappSDK.LOG.uploadLogs()
-      wx.showToast({
-        title: `上传成功`,
-      });
     } catch (err) {
       console.error(err)
       wx.showToast({
         title: `上传失败`,
       });
-    } finally {
-      wx.hideLoading()
     }
   },
 
   /**
    * 上传日志回调
    */
-  onSubmitLog() {
-    let page = this;
+  onMore() {
+    let _this = this;
     let mediaAction = this.isBroadcaster() ? "下麦" : "上麦"
     wx.showActionSheet({
       itemList: [mediaAction, "上传日志"],
@@ -417,10 +403,7 @@ Page({
             content: '点击确定可以上传日志，帮助我们了解您在使用过程中的问题',
             success: function (res) {
               if (res.confirm) {
-                console.log('用户点击确定')
-                page.uploadLogs();
-              } else if (res.cancel) {
-                console.log('用户点击取消')
+                _this.uploadLogs();
               }
             }
           })
@@ -443,34 +426,36 @@ Page({
    * 初始化sdk推流
    */
   async initAgoraChannel(uid, channel) {
-    this.client = new AgoraMiniappSDK.Client()
+    client = new AgoraMiniappSDK.Client()
     //subscribe stream events
     this.subscribeEvents();
-    await this.client.init(APPID)
-    await this.client.setRole(this.role)
-    await this.client.join(undefined, channel, uid)
+    await client.init(APPID)
+    await client.setRole(this.role)
+    // input your token here if exists
+    let token = undefined
+    await client.join(token, channel, uid)
     let url = ''
     if (this.isBroadcaster()) {
-      url = await this.client.publish(url);
+      url = await client.publish(url);
     }
     return url
   },
 
-  async reinitAgoraChannel(uid, channel) {
-    this.client = new AgoraMiniappSDK.Client()
-    // set log level
-    AgoraMiniappSDK.LOG.setLogLevel(-1);
+  async reInitAgoraChannel(uid, channel) {
+    client = new AgoraMiniappSDK.Client()
     //subscribe stream events
     this.subscribeEvents();
     let uids = this.data.media.map(item => {
       return item.uid;
     });
-    await this.client.init(APPID)
-    await this.client.setRole(this.role);
-    await this.client.rejoin(undefined, channel, uid, uids)
+    await client.init(APPID)
+    await client.setRole(this.role);
+    // input your token here if exists
+    let token = undefined
+    await client.rejoin(token, channel, uid, uids)
     let url = ''
     if (this.isBroadcaster()) {
-      url = await this.client.publish()
+      url = await client.publish()
     }
     return url
   },
@@ -493,15 +478,15 @@ Page({
 
   async becomeBroadcaster() {
     this.role = "broadcaster"
-    await this.client.setRole(this.role)
-    const url = await this.client.publish()
+    await client.setRole(this.role)
+    const url = await client.publish()
     return url
   },
 
   async becomeAudience() {
-    await this.client.unpublish()
+    await client.unpublish()
     this.role = "audience"
-    await this.client.setRole(this.role)
+    await client.setRole(this.role)
   },
 
   /**
@@ -516,12 +501,14 @@ Page({
     // always destroy client first
     // *important* miniapp supports 5 websockets maximum at same time
     // do remember to destroy old client first before creating new ones
-    await this.client.destroy();
+    await client.destroy();
+    client = null
+
     this.reconnectTimer = setTimeout(async () => {
       let uid = this.uid;
       let channel = this.channel;
       try {
-        const url = await this.reinitAgoraChannel(uid, channel)
+        const url = await this.reInitAgoraChannel(uid, channel)
         let ts = new Date().getTime();
         if (this.isBroadcaster()) {
           if (this.hasMedia(0, this.uid)) {
@@ -551,18 +538,18 @@ Page({
   },
 
   onPusherNetstatus: function (e) {
-    this.client.updatePusherNetStatus(e.detail);
+    client.updatePusherNetStatus(e.detail);
   },
 
   onPusherStatechange: function (e) {
-    this.client.updatePusherStateChange(e.detail);
+    client.updatePusherStateChange(e.detail);
   },
 
   onPlayerNetstatus: function (e) {
     // 遍历所有远端流进行数据上报
     let allPlayerStream = this.data.media.filter(m => m.uid !== this.uid);
     allPlayerStream.forEach(item => {
-      this.client.updatePlayerNetStatus(item.uid, e.detail);
+      client.updatePlayerNetStatus(item.uid, e.detail);
     });
   },
 
@@ -570,7 +557,7 @@ Page({
     let allPlayerStream = this.data.media.filter(m => m.uid !== this.uid);
     // 这里 需要去获取所有远端流的 uid
     allPlayerStream.forEach(item => {
-      this.client.updatePlayerStateChange(item.uid, e.detail);
+      client.updatePlayerStateChange(item.uid, e.detail);
     });
   },
 
@@ -586,7 +573,7 @@ Page({
      * in case of 270 degrees, the video could be
      * up side down
      */
-    this.client.on("video-rotation", (e) => {
+    client.on("video-rotation", (e) => {
       console.log(`video rotated: ${e.rotation} ${e.uid}`)
       setTimeout(() => {
         const player = this.getPlayerComponent(e.uid);
@@ -596,14 +583,14 @@ Page({
     /**
      * fired when new stream join the channel
      */
-    this.client.on("stream-added", async e => {
+    client.on("stream-added", async e => {
       let uid = e.uid;
       const ts = new Date().getTime();
       console.log(`stream ${uid} added`);
       /**
        * subscribe to get corresponding url
        */
-      const { url, rotation } = await this.client.subscribe(uid);
+      const { url, rotation } = await client.subscribe(uid);
       let media = this.data.media || [];
       let matchItem = null;
       for (let i = 0;i < media.length;i++) {
@@ -633,7 +620,7 @@ Page({
     /**
      * remove stream when it leaves the channel
      */
-    this.client.on("stream-removed", e => {
+    client.on("stream-removed", e => {
       let uid = e.uid;
       console.log(`stream ${uid} removed`);
       this.removeMedia(uid);
@@ -645,10 +632,9 @@ Page({
      * it's also recommended to wait for few seconds before
      * reconnect attempt
      */
-    this.client.on("error", err => {
-      let errObj = err || {};
-      let code = errObj.code || 0;
-      let reason = errObj.reason || "";
+    client.on("error", err => {
+      let code = err.code || 0;
+      let reason = err.reason || "";
       console.log(`error: ${code}, reason: ${reason}`);
       if (code === 501 || code === 904) {
         this.reconnect();
@@ -663,7 +649,7 @@ Page({
      * NOTE you can ignore such event if it's for pusher or happens before
      * stream-added
      */
-    this.client.on('update-url', e => {
+    client.on('update-url', e => {
       console.log(`update-url: ${JSON.stringify(e)}`);
       let uid = e.uid;
       let url = e.url;
@@ -679,11 +665,11 @@ Page({
       }
     });
 
-    this.client.on("token-privilege-will-expire", () => {
+    client.on("token-privilege-will-expire", () => {
       console.log("当前 token 即将过期，请更新 token");
     });
 
-    this.client.on("token-privilege-did-expire", () => {
+    client.on("token-privilege-did-expire", () => {
       console.log("当前 token 已过期，请更新 token 并重新加入频道");
     });
   }

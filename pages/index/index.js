@@ -1,26 +1,13 @@
+const { SDK_VERSION } = require("../../lib/agora-miniapp-sdk.js");
+
 Page({
   data: {
-    // whether to disable join btn or not
-    disableJoin: false,
-    // sdk version
-    version:"2.6.1"
+    version: SDK_VERSION
   },
-  onLoad(options) {
+  onLoad() {
     this.channel = "";
     this.lock = false;
   },
-
-  onShareAppMessage() {
-
-  },
-  
-  onHide() {
-  },
-
-  onUnload() {
-
-  },
-
   join() {
     let value = this.channel || "";
     if (!value) {
