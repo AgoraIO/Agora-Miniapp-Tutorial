@@ -436,7 +436,7 @@ Page({
     await client.join(token, channel, uid)
     let url = ''
     if (this.isBroadcaster()) {
-      url = await client.publish(url);
+      url = await client.publish();
     }
     return url
   },
